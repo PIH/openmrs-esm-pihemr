@@ -1,3 +1,6 @@
+# OS files
+.DS_Store
+
 # Logs
 logs
 *.log
@@ -85,3 +88,15 @@ results.xml
 
 # Translations
 moduleName
+=======
+# dotenv environment variables file
+.env
+
+# next.js build output
+.next
+
+dist/
+
+# Intellij integration
+.idea/
+*.iml

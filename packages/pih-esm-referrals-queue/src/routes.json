@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.openmrs.org/routes.schema.json",
+  "pages": [
+    {
+      "component": "root",
+      "route": "referrals-queue"
+    }
+  ]
+}

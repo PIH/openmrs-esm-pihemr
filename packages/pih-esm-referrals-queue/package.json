@@ -1,0 +1,97 @@
+{
+  "name": "@pih/esm-referrals-queue-app",
+  "version": "2.0.0",
+  "license": "MPL-2.0",
+  "description": "A page for viewing the J9 Home Visits from CommCare",
+  "browser": "dist/pih-esm-referrals-queue-app.js",
+  "main": "src/index.ts",
+  "source": true,
+  "scripts": {
+    "start": "openmrs develop",
+    "serve": "webpack serve --mode=development",
+    "build": "webpack --mode production",
+    "analyze": "webpack --mode=production --env.analyze=true",
+    "lint": "eslint src --ext js,jsx,ts,tsx",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "typescript": "tsc",
+    "test": "jest --config jest.config.json",
+    "verify": "concurrently 'yarn:lint' 'yarn:test' 'yarn:typescript'",
+    "coverage": "yarn test -- --coverage",
+    "prepare": "husky install"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged && yarn verify"
+    }
+  },
+  "browserslist": [
+    "extends browserslist-config-openmrs"
+  ],
+  "keywords": [
+    "openmrs",
+    "microfrontends"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pih/pih-esm-referrals-queue.git"
+  },
+  "homepage": "https://github.com/pih/pih-esm-referrals-queue#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/pih/pih-esm-referrals-queue/issues"
+  },
+  "dependencies": {
+    "lodash-es": "^4.17.15"
+  },
+  "peerDependencies": {
+    "@carbon/react": "^1.9.0",
+    "@openmrs/esm-framework": "*",
+    "dayjs": "1.x",
+    "react": "18.x",
+    "react-i18next": "11.x",
+    "react-router-dom": "6.x",
+    "rxjs": "6.x"
+  },
+  "devDependencies": {
+    "@carbon/icons-react": "^10.18.0",
+    "@carbon/react": "1.9.0",
+    "@openmrs/esm-framework": "^5.0.3-pre.878",
+    "@swc/core": "^1.2.203",
+    "@swc/jest": "^0.2.21",
+    "@testing-library/dom": "^7.20.0",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/jest": "^28.1.4",
+    "@types/react": "^18.0.14",
+    "@types/react-dates": "^21.8.0",
+    "@types/react-dom": "^18.0.5",
+    "@types/react-router": "^5.1.14",
+    "@types/react-router-dom": "^5.1.7",
+    "@types/webpack-env": "^1.16.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "concurrently": "^6.2.0",
+    "css-loader": "^6.7.1",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-ts-react-important-stuff": "^3.0.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "husky": "^6.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.0.4",
+    "jest-cli": "^27.0.4",
+    "mockdate": "^3.0.5",
+    "openmrs": "^5.0.3-pre.878",
+    "prettier": "^2.3.0",
+    "pretty-quick": "^3.1.0",
+    "react": "^18.2.0",
+    "react-dates": "^21.8.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^11.7.0",
+    "react-router-dom": "^6.3.0",
+    "rxjs": "^6.5.4",
+    "typescript": "^4.3.2"
+  }
+}
