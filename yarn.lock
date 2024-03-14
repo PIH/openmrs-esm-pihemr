@@ -3489,7 +3489,6 @@ __metadata:
     "@types/react-router-dom": "npm:^5.1.7"
     "@types/webpack-env": "npm:^1.16.0"
     "@typescript-eslint/parser": "npm:^5.28.0"
-    concurrently: "npm:^6.2.0"
     css-loader: "npm:^6.7.1"
     identity-obj-proxy: "npm:^3.0.0"
     jest: "npm:^27.0.4"
@@ -7201,24 +7200,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"concurrently@npm:^6.2.0":
-  version: 6.5.1
-  resolution: "concurrently@npm:6.5.1"
-  dependencies:
-    chalk: "npm:^4.1.0"
-    date-fns: "npm:^2.16.1"
-    lodash: "npm:^4.17.21"
-    rxjs: "npm:^6.6.3"
-    spawn-command: "npm:^0.0.2-1"
-    supports-color: "npm:^8.1.0"
-    tree-kill: "npm:^1.2.2"
-    yargs: "npm:^16.2.0"
-  bin:
-    concurrently: bin/concurrently.js
-  checksum: 10/9ea52a75547418b64fd9d6a956f2f6ffc5b5262d99958b258dce4403b041e81dc79ae09dd9edeb4ba81df1fd6bf62d73e779b8a23c1a76e5464b151830bd92d8
-  languageName: node
-  linkType: hard
-
 "config-chain@npm:^1.1.11":
   version: 1.1.13
   resolution: "config-chain@npm:1.1.13"
@@ -8050,7 +8031,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns@npm:^2.16.1, date-fns@npm:^2.30.0":
+"date-fns@npm:^2.30.0":
   version: 2.30.0
   resolution: "date-fns@npm:2.30.0"
   dependencies:
@@ -14654,7 +14635,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rxjs@npm:^6.5.3, rxjs@npm:^6.5.4, rxjs@npm:^6.6.0, rxjs@npm:^6.6.3":
+"rxjs@npm:^6.5.3, rxjs@npm:^6.5.4, rxjs@npm:^6.6.0":
   version: 6.6.7
   resolution: "rxjs@npm:6.6.7"
   dependencies:
@@ -15226,13 +15207,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spawn-command@npm:^0.0.2-1":
-  version: 0.0.2
-  resolution: "spawn-command@npm:0.0.2"
-  checksum: 10/f13e8c3c63abd4a0b52fb567eba5f7940d480c5ed3ec61781d38a1850f179b1196c39e6efa2bbd301f82c1bf1cd7807abc8fbd8fc8e44bcaa3975a124c0d1657
-  languageName: node
-  linkType: hard
-
 "spdx-correct@npm:^3.0.0":
   version: 3.1.1
   resolution: "spdx-correct@npm:3.1.1"
@@ -15555,7 +15529,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supports-color@npm:^8.0.0, supports-color@npm:^8.1.0":
+"supports-color@npm:^8.0.0":
   version: 8.1.1
   resolution: "supports-color@npm:8.1.1"
   dependencies:
@@ -15897,15 +15871,6 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.1"
   checksum: 10/302b13f458da713b2a6ff779a0c1d27361d369fdca6c19330536d31db61789b06b246968fc879fdac818a92d02643dca1a0f4da5618df86aea4a79fb3243d3f3
-  languageName: node
-  linkType: hard
-
-"tree-kill@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "tree-kill@npm:1.2.2"
-  bin:
-    tree-kill: cli.js
-  checksum: 10/49117f5f410d19c84b0464d29afb9642c863bc5ba40fcb9a245d474c6d5cc64d1b177a6e6713129eb346b40aebb9d4631d967517f9fbe8251c35b21b13cd96c7
   languageName: node
   linkType: hard
 
