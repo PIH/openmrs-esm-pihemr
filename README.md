@@ -1,17 +1,21 @@
-:wave: *New to our project? Be sure to review the [OpenMRS 3 Frontend Developer Documentation](https://openmrs.github.io/openmrs-esm-core/#/). You may find the [Map of the Project](https://openmrs.github.io/openmrs-esm-core/#/main/map) especially helpful.* :teacher: 
+# This is the PIH monorepo for OpenMRS 3.x.
 
-![Node.js CI](https://github.com/openmrs/openmrs-esm-patient-management/actions/workflows/ci.yml/badge.svg)
+## TODO:
+- set up release workflows (and update package.json)
 
-# OpenMRS Patient Management
+        // enable these when we figure out 
+        // "ci:publish": "yarn workspaces foreach --all --topological --exclude @openmrs/esm-patient-management npm publish --access public --tag latest",
+        // "ci:prepublish": "yarn workspaces foreach --all --topological --exclude @openmrs/esm-patient-management npm publish --access public --tag next",
+        // "release": "yarn workspaces foreach --all --topological version",
 
-This repository contains frontend modules for the OpenMRS SPA. These modules relate to registering and editing patients, searching for existing patients, creating and managing patient lists, managing patient queues in an outpatient setting and creating, editing and managing patient appointments. The modules within this repository include:
-
-- [Active visits app](packages/esm-active-visits-app/)
-- [Appointments app](packages/esm-appointments-app/)
-- [Service queues](packages/esm-service-queues-app/README.md)
-- [Patient search](packages/esm-patient-search-app)
-- [Patient registration](packages/esm-patient-registration-app)
-- [Patient list management](packages/esm-patient-list-management-app)
+- review the dependencies and devDependencies in package.json and clean it up
+- add github actions. List of removed files under .github/workflows:
+    - bundle-size.yml
+    - ci.yml
+    - e2e.yml
+    - tx-pull.yml
+    - tx-push.yml
+- re-setup github actions in old esm-referral-queues
 
 ## Setup
 
@@ -179,4 +183,3 @@ should just be the version number (e.g., `3.2.1`). The creation of the GitHub re
 will cause GitHub Actions to publish the packages, completing the release process.
 
 > Don't run `npm publish` or `yarn publish`. Use the above process.
-
