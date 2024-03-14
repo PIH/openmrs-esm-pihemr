@@ -1,6 +1,3 @@
-# OS files
-.DS_Store
-
 # Logs
 logs
 *.log
@@ -79,24 +76,16 @@ dist
 .turbo/
 ~
 
+# vim
+*.swp
+
 # Playwright and e2e tests
 /test-results/
 /playwright-report/
 /playwright/.cache/
 e2e/storageState.json
 results.xml
+.env
 
 # Translations
 moduleName
-=======
-# dotenv environment variables file
-.env
-
-# next.js build output
-.next
-
-dist/
-
-# Intellij integration
-.idea/
-*.iml
