@@ -1,4 +1,5 @@
 import { openmrsObservableFetch } from '@openmrs/esm-framework';
+import { type Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export function getReferrals({ fromDate, toDate, locale }): Observable<Object[]> {

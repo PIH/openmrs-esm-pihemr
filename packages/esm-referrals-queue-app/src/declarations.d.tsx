@@ -1,5 +1,3 @@
-declare type Observable<T> = import('rxjs').Observable<T>;
-
 declare module '*.css';
 declare module '*.scss';
 declare module '@carbon/react';
