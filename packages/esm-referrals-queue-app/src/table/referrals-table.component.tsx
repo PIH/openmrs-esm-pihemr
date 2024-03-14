@@ -1,19 +1,8 @@
-import React from "react";
-import {
-  Table,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableBody,
-  TableCell,
-} from "@carbon/react";
-import {
-  ConfigurableLink,
-  interpolateString,
-  useConfig,
-} from "@openmrs/esm-framework";
-import { Trans } from "react-i18next";
-import { formatDate } from "../util";
+import React from 'react';
+import { Table, TableHead, TableHeader, TableRow, TableBody, TableCell } from '@carbon/react';
+import { ConfigurableLink, interpolateString, useConfig } from '@openmrs/esm-framework';
+import { Trans } from 'react-i18next';
+import { formatDate } from '../util';
 
 export interface ReferralsTableProps {
   referrals: Referral[];
@@ -54,10 +43,8 @@ export default function ReferrablesTable(props: ReferralsTableProps) {
                 <TableCell>
                   <ConfigurableLink
                     to={interpolateString(config.links.patientDash, {
-                      patientUuid:
-                        referral.patient_uuid || referral.person_uuid,
-                    })}
-                  >
+                      patientUuid: referral.patient_uuid || referral.person_uuid,
+                    })}>
                     {referral.zl_emr_id}
                   </ConfigurableLink>
                 </TableCell>
@@ -65,28 +52,22 @@ export default function ReferrablesTable(props: ReferralsTableProps) {
                 <TableCell>
                   <ConfigurableLink
                     to={interpolateString(config.links.visitPage, {
-                      patientUuid:
-                        referral.patient_uuid || referral.person_uuid,
+                      patientUuid: referral.patient_uuid || referral.person_uuid,
                       visitUuid: referral.visit_uuid,
-                    })}
-                  >
+                    })}>
                     {formatDate(referral.referral_date)}
                   </ConfigurableLink>
                 </TableCell>
                 <TableCell>{referral.referral_type}</TableCell>
                 <TableCell>{referral.details}</TableCell>
                 <TableCell>
-                  {config.pendingStatuses.includes(
-                    referral.fulfillment_status
-                  ) ? (
+                  {config.pendingStatuses.includes(referral.fulfillment_status) ? (
                     <ConfigurableLink
                       to={interpolateString(config.links.homeVisitForm, {
-                        patientUuid:
-                          referral.patient_uuid || referral.person_uuid,
+                        patientUuid: referral.patient_uuid || referral.person_uuid,
                         visitUuid: referral.visit_uuid,
                         encounterUuid: referral.encounter_uuid,
-                      })}
-                    >
+                      })}>
                       {referral.fulfillment_status}
                     </ConfigurableLink>
                   ) : (

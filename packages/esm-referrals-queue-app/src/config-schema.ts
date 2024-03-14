@@ -1,4 +1,4 @@
-import { Type, validators } from "@openmrs/esm-framework";
+import { Type, validators } from '@openmrs/esm-framework';
 
 /**
  * This is the config schema. It expects a configuration object which
@@ -25,33 +25,25 @@ export const configSchema = {
     patientDash: {
       _type: Type.String,
       _default:
-        "${openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&app=pih.app.clinicianDashboard",
-      _validators: [validators.isUrlWithTemplateParameters(["patientUuid"])],
+        '${openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&app=pih.app.clinicianDashboard',
+      _validators: [validators.isUrlWithTemplateParameters(['patientUuid'])],
     },
     visitPage: {
       _type: Type.String,
       _default:
-        "${openmrsBase}/pihcore/visit/visit.page?patient=${patientUuid}&visit=${visitUuid}&suppressActions=true#/overview",
-      _validators: [
-        validators.isUrlWithTemplateParameters(["patientUuid", "visitUuid"]),
-      ],
+        '${openmrsBase}/pihcore/visit/visit.page?patient=${patientUuid}&visit=${visitUuid}&suppressActions=true#/overview',
+      _validators: [validators.isUrlWithTemplateParameters(['patientUuid', 'visitUuid'])],
     },
     homeVisitForm: {
       _type: Type.String,
       _default:
-        "${openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=/mirebalais/spa/referrals-queue",
-      _validators: [
-        validators.isUrlWithTemplateParameters([
-          "patientUuid",
-          "visitUuid",
-          "encounterUuid",
-        ]),
-      ],
+        '${openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=/mirebalais/spa/referrals-queue',
+      _validators: [validators.isUrlWithTemplateParameters(['patientUuid', 'visitUuid', 'encounterUuid'])],
     },
   },
   pendingStatuses: {
     _type: Type.Array,
-    _default: ["Pending status", "Referral unmet"],
+    _default: ['Pending status', 'Referral unmet'],
     _elements: {
       _type: Type.String,
     },
