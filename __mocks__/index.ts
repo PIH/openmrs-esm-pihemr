@@ -1,15 +1,2 @@
-export * from './active-visits.mock';
-export * from './address.mock';
-export * from './appointments.mock';
-export * from './auto-generation-options.mock';
-export * from './identifier-types.mock';
-export * from './identifiers.mock';
-export * from './locations.mock';
-export * from './metrics.mock';
-export * from './patient-visits.mock';
-export * from './patient-registration.mock';
-export * from './queue-entry.mock';
-export * from './queue-rooms.mock';
-export * from './search.mock';
-export * from './session.mock';
-export * from './visits.mock';
+// TODO: add *.mock.ts files in this folder and uncomment this
+// export * from './example.mock';
