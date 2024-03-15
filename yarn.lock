@@ -3314,7 +3314,6 @@ __metadata:
     identity-obj-proxy: "npm:^3.0.0"
     jest: "npm:^27.0.4"
     jest-cli: "npm:^27.0.4"
-    lodash-es: "npm:^4.17.21"
     mockdate: "npm:^3.0.5"
     react: "npm:^18.2.0"
     react-dates: "npm:^21.8.0"
