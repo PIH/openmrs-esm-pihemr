@@ -16,11 +16,17 @@ To start a dev server for a specific module, run:
 yarn start --sources 'packages/esm-<insert-package-name>-app'
 ```
 
-To do this with specific configuration, run:
+To do this against your local SDK with a typical set of PIH EMR configuration files:
 
 ```bash
 yarn start --backend "http://localhost:8080/" --config-url "site/base-config.json" --config-url "site/config.json" --sources 'packages/esm-<insert-package-name>-app' --port 8081
 ```
+
+To develop against a remote server backend or with a custom OpenMRS webapp name:
+
+```bash```
+
+yarn start --backend "https://humci.pih-emr.org/" --api-url /mirebalais/ --spa-path /mirebalais/spa/ --port 8081 --sources "packages/esm-referrals-queue-app/"
 
 You could provide `yarn start` with as many `sources` arguments as you require. For example:
 
