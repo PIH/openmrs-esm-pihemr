@@ -79,6 +79,9 @@ dist
 # vim
 *.swp
 
+# Package lock
+package-lock.json
+
 # Playwright and e2e tests
 /test-results/
 /playwright-report/
