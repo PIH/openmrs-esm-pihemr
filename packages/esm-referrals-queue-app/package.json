@@ -1,11 +1,12 @@
 {
   "name": "@pih/esm-referrals-queue-app",
-  "version": "2.0.0",
-  "license": "MPL-2.0",
+  "version": "2.1.0",
   "description": "A page for viewing the J9 Home Visits from CommCare",
   "browser": "dist/pih-esm-referrals-queue-app.js",
   "main": "src/index.ts",
   "source": true,
+  "license": "MPL-2.0",
+  "homepage": "https://github.com/PIH/openmrs-esm-pihemr#readme",
   "scripts": {
     "start": "openmrs develop",
     "serve": "webpack serve --mode=development",
@@ -18,31 +19,22 @@
     "coverage": "yarn test -- --coverage",
     "prepare": "husky install"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged && yarn verify"
-    }
-  },
   "browserslist": [
     "extends browserslist-config-openmrs"
   ],
   "keywords": [
-    "openmrs",
-    "microfrontends"
+    "openmrs"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pih/pih-esm-referrals-queue.git"
-  },
-  "homepage": "https://github.com/pih/pih-esm-referrals-queue#readme",
   "publishConfig": {
     "access": "public"
   },
-  "bugs": {
-    "url": "https://github.com/pih/pih-esm-referrals-queue/issues"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PIH/openmrs-esm-pihemr.git"
   },
-  "dependencies": {
-    "lodash-es": "^4.17.21"
+
+  "bugs": {
+    "url": "https://github.com/PIH/openmrs-esm-pihemr/issues"
   },
   "peerDependencies": {
     "@carbon/react": "^1.9.0",
