@@ -1,46 +1,14 @@
 # This is the PIH monorepo for OpenMRS 3.x.
 
-## TODO:
-- set up release workflows (and update package.json)
+## Developer Setup
 
-        // enable these when we figure out 
-        // "ci:publish": "yarn workspaces foreach --all --topological --exclude @openmrs/esm-patient-management npm publish --access public --tag latest",
-        // "ci:prepublish": "yarn workspaces foreach --all --topological --exclude @openmrs/esm-patient-management npm publish --access public --tag next",
-        // "release": "yarn workspaces foreach --all --topological version",
+Check out the O3 developer documentation [here](http://o3-dev.docs.openmrs.org).
 
-- review the dependencies and devDependencies in package.json and clean it up
-- add github actions. List of removed files under .github/workflows:
-    - bundle-size.yml
-    - ci.yml
-    - e2e.yml
-    - tx-pull.yml
-    - tx-push.yml
-- re-setup github actions in old esm-referral-queues
+This monorepo uses [yarn](https://yarnpkg.com).  To install the dependancies, run:
 
-## Setup
-
-Check out the developer documentation [here](http://o3-dev.docs.openmrs.org).
-
-This monorepo uses [yarn](https://yarnpkg.com).
-
-To install the dependancies, run:
 ```bash
 yarn install
 ```
-
-To set up environment variables for the project, follow these steps:
-
-1. Create a copy of the .env.example file by running the following command:
-
-    ```bash
-    cp example.env .env
-    ```
-
-2. Open the newly created .env file in the root of the project.
-
-3. Add the environment variables you need.
-
-Note: These variables are currently only used for end-to-end tests.
 
 To start a dev server for a specific module, run:
 
@@ -48,17 +16,21 @@ To start a dev server for a specific module, run:
 yarn start --sources 'packages/esm-<insert-package-name>-app'
 ```
 
-This command uses the [openmrs](https://www.npmjs.com/package/openmrs) tooling to fire up a dev server running `esm-patient-management` as well as the specified module.
-
-You could provide `yarn start` with as many `sources` arguments as you require. For example, to run the patient registration and patient search modules only, use:
+To do this with specific configuration, run:
 
 ```bash
-yarn start --sources 'packages/esm-patient-search-app' --sources 'packages/esm-patient-registration-app'
+yarn start --backend "http://localhost:8080/" --config-url "site/base-config.json" --config-url "site/config.json" --sources 'packages/esm-<insert-package-name>-app' --port 8081
+```
+
+You could provide `yarn start` with as many `sources` arguments as you require. For example:
+
+```bash
+yarn start --sources 'packages/esm-xxx-app' --sources 'packages/esm-yyy-app'
 ```
 
 ## Troubleshooting
 
-If you notice that your local version of the application is not working or that there's a mismatch between what you see locally versus what's in the reference application, you likely have outdated versions of core libraries. To update core libraries, run the following commands:
+If you notice that your local version of the application is not working or that there's a mismatch between what you see locally versus what's expected, you likely have outdated versions of core libraries. To update core libraries, run the following commands:
 
 ```bash
 # Upgrade core libraries
@@ -71,10 +43,9 @@ git checkout package.json
 yarn
 ```
 
-
 ## Contributing
 
-Please read our [contributing](http://o3-dev.docs.openmrs.org/#/getting_started/contributing) guide.
+Please read the OpenMRS [contributing](http://o3-dev.docs.openmrs.org/#/getting_started/contributing) guide.
 
 ## Running tests
 

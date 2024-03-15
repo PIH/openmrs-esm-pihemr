@@ -1,9 +1,11 @@
+import { defineConfigSchema } from '@openmrs/esm-framework';
 import React from 'react';
 import { of } from 'rxjs';
 import { render, fireEvent, screen, within, waitFor } from '@testing-library/react';
 import MockDate from 'mockdate';
 import ReferralsQueue from './referrals-queue.component';
 import { getReferrals } from './referrals-queue.resource';
+import { configSchema } from '../config-schema';
 
 jest.mock('./referrals-queue.resource');
 const mockedGetReferrals = getReferrals as jest.Mock;
@@ -55,6 +57,9 @@ window.location = { href: '/referrals-queue' };
 
 describe('referrals queue', () => {
   const todayString = '2020-10-31';
+  beforeAll(() => {
+    defineConfigSchema('@pih/esm-referral-queues-app', configSchema);
+  });
   beforeEach(() => {
     MockDate.set(todayString + 'T10:00:00.000-0400');
     mockedGetReferrals.mockReset();
