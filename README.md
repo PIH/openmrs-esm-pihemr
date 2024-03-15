@@ -64,21 +64,18 @@ yarn turbo test:watch
 To run tests for a specific package, pass the package name to the `--filter` flag. For example, to run tests for `esm-patient-conditions-app`, run:
 
 ```bash
-yarn turbo test --filter="esm-patient-conditions-app"
+yarn turbo test --filter="esm-referral-queues-app"
 ```
 
 To run a specific test file, run:
 
 ```bash
-yarn turbo test -- basic-search
+yarn turbo test -- referrals-queue
 ```
 
 The above command will only run tests in the file or files that match the provided string.
 
-You can also run the matching tests from above in watch mode by running:
-
-```bash
-yarn turbo test:watch --basic-search
+You can also run the matching tests from above in watch mode
 ```
 
 To generate a `coverage` report, run:
@@ -87,46 +84,15 @@ To generate a `coverage` report, run:
 yarn turbo coverage
 ```
 
-By default, `turbo` will cache test runs. This means that re-running tests wihout changing any of the related files will return the cached logs from the last run. To bypass the cache, run tests with the `force` flag, as follows:
+By default, `turbo` will cache test runs. This means that re-running tests without changing any of the related files will return the cached logs from the last run. To bypass the cache, run tests with the `force` flag, as follows:
 
 ```bash
 yarn turbo test --force
 ```
 
-### Unit tests
-To run unit tests, use:
-
-```sh
-yarn test
-```
-
-### E2E tests
-
-To run E2E tests, make sure the dev server is running by using:
-
-```sh
-yarn start --sources 'packages/esm-*-app/'
-```
-
-Then, in a separate terminal, run:
-
-```sh
-yarn test-e2e --headed
-```
-
-Please read [our e2e test guide](https://o3-docs.openmrs.org/docs/frontend-modules/testing#end-to-end-testing-with-playwright) for more information about E2E testing.
-
-### Updating Playwright Version
-
-To upgrade your Playwright version, ensure that you update both the package.json file and the [e2e/support/bamboo/playwright.Dockerfile](e2e/support/bamboo/playwright.Dockerfile).
-
 ## Design Patterns
 
-For documentation about our design patterns, please visit our [design system](https://zeroheight.com/23a080e38/p/880723--introduction) documentation website.
-
-## Deployment
-
-The `main` branch of this repo is deployed in a [demo environment](https://openmrs-spa.org/openmrs/spa).
+For documentation about our design patterns, please visit the OpenMRS [design system](https://zeroheight.com/23a080e38/p/880723--introduction) documentation website.
 
 ## Configuration
 
@@ -140,17 +106,15 @@ To increment the version, run the following command:
 yarn release
 ```
 
-You will need to pick the next version number. We use minor changes (e.g. `3.2.0` → `3.3.0`)
-to indicate big new features and breaking changes, and patch changes (e.g. `3.2.0` → `3.2.1`)
-otherwise.
+See [CI Github Action](.github/workflows/ci.yml) to view how builds are generated and pushed to NPM.
 
-Note that this command will not create a new tag, nor publish the packages.
-After running it, make a PR or merge to `main` with the resulting changeset.
+To do a release, you will need to pick the next version number. We use minor changes (e.g. `3.2.0` → `3.3.0`)
+to indicate big new features and breaking changes, and patch changes (e.g. `3.2.0` → `3.2.1`) otherwise.
 
-Once the version bump is merged, go to GitHub and
-[draft a new release](https://github.com/openmrs/openmrs-esm-patient-management/releases/new). 
-The tag should be prefixed with `v` (e.g., `v3.2.1`), while the release title
-should just be the version number (e.g., `3.2.1`). The creation of the GitHub release
-will cause GitHub Actions to publish the packages, completing the release process.
+Note that this command will not create a new tag, nor publish the packages.  After running it, make a PR or merge to `main` with the resulting changeset.
+
+Once the version bump is merged, go to GitHub and [draft a new release](https://github.com/PIH/openmrs-esm-pihemr/releases/new). 
+The tag should be prefixed with `v` (e.g., `v3.2.1`), while the release title should just be the version number (e.g., `3.2.1`). 
+The creation of the GitHub release will cause GitHub Actions to publish the packages, completing the release process.
 
 > Don't run `npm publish` or `yarn publish`. Use the above process.

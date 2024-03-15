@@ -13,7 +13,6 @@
     "release": "yarn workspaces foreach --all --topological version",
     "verify": "turbo lint typescript test --color --concurrency=2",
     "prettier": "prettier --config prettier.config.js --write \"packages/**/*.{ts,tsx,css,scss}\" \"e2e/**/*.ts\" --list-different",
-    "test-e2e": "playwright test",
     "postinstall": "husky install",
     "extract-translations": "turbo extract-translations -- --config ../../tools/i18next-parser.config.js"
   },
