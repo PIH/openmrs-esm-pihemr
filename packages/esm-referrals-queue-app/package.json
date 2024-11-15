@@ -38,11 +38,12 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
+    "@carbon/react": "~1.37.0",
     "moment": "^2.30.1",
     "react-dates": "^21.8.0"
   },
   "peerDependencies": {
-    "@openmrs/esm-framework": "^5.4.0",
+    "@openmrs/esm-framework": "5.x",
     "i18next": "^19.0.0",
     "react": "18.x",
     "react-dom": "18.x",
@@ -52,14 +53,6 @@
     "swr": "^2.2.2"
   },
   "devDependencies": {
-    "@openmrs/esm-framework": "^5.4.0",
-    "i18next": "^19.0.0",
-    "react": "18.x",
-    "react-dates": "^21.8.0",
-    "react-dom": "18.x",
-    "react-i18next": "11.x",
-    "rxjs": "6.x",
-    "single-spa": "^6.x",
-    "swr": "^2.2.2"
+    "webpack": "^5.74.0"
   }
 }

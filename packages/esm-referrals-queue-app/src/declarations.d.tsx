@@ -1,7 +1,6 @@
+declare module '@carbon/react';
 declare module '*.css';
 declare module '*.scss';
-declare module '@carbon/react';
-declare type SideNavProps = {};
 
 type Referral = {
   details: string;
