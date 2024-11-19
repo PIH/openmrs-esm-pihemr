@@ -1,8 +1,8 @@
 {
-  "name": "@pih/esm-referrals-queue-app",
-  "version": "2.1.0",
-  "description": "A page for viewing the J9 Home Visits from CommCare",
-  "browser": "dist/pih-esm-referrals-queue-app.js",
+  "name": "@pih/esm-commons-app",
+  "version": "1.0.0",
+  "description": "An app to define extensions to be slotted into other apps that are not PIH specific.",
+  "browser": "dist/pih-esm-commons-app.js",
   "main": "src/index.ts",
   "source": true,
   "license": "MPL-2.0",

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.openmrs.org/routes.schema.json",
+  "pages": [
+  ],
+  "extensions": [
+    {
+      "name": "o2-visit-summary-workspace-siderail-button",
+      "component": "o2VisitSummaryWorkspaceSideRailIcon",
+      "slot": "action-menu-ward-patient-items-slot"
+    }
+  ],
+  "workspaces": [
+    {
+      "name": "o2-visit-summary-workspace",
+      "component": "o2VisitSummaryWorkspace",
+      "title": "visitSummary",
+      "type": "o2-visit-summary",
+      "sidebarFamily": "ward-patient",
+      "hasOwnSidebar": true,
+      "width": "extra-wide"
+    }
+  ]
+}
