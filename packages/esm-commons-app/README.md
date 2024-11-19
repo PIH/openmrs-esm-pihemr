@@ -1,0 +1,1 @@
+This ESM is not really an app (for now). It is a place to define extensions to be slotted into other apps that are not PIH specific (e.g. the ward app).

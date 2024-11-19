@@ -3137,6 +3137,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pih/esm-commons-app@workspace:packages/esm-commons-app":
+  version: 0.0.0-use.local
+  resolution: "@pih/esm-commons-app@workspace:packages/esm-commons-app"
+  dependencies:
+    "@babel/runtime": "npm:^7.24.0"
+    "@carbon/react": "npm:~1.37.0"
+    moment: "npm:^2.30.1"
+    react-dates: "npm:^21.8.0"
+    webpack: "npm:^5.74.0"
+  peerDependencies:
+    "@openmrs/esm-framework": 5.x
+    i18next: ^19.0.0
+    react: 18.x
+    react-i18next: 11.x
+    react-router-dom: ^6.x
+    swr: 2.x
+  languageName: unknown
+  linkType: soft
+
 "@pih/esm-referrals-queue-app@workspace:packages/esm-referrals-queue-app":
   version: 0.0.0-use.local
   resolution: "@pih/esm-referrals-queue-app@workspace:packages/esm-referrals-queue-app"
@@ -3150,11 +3169,9 @@ __metadata:
     "@openmrs/esm-framework": 5.x
     i18next: ^19.0.0
     react: 18.x
-    react-dom: 18.x
     react-i18next: 11.x
-    rxjs: 6.x
-    single-spa: ^6.x
-    swr: ^2.2.2
+    react-router-dom: ^6.x
+    swr: 2.x
   languageName: unknown
   linkType: soft
 
@@ -3196,7 +3213,7 @@ __metadata:
     react-dom: "npm:^18.2.0"
     rxjs: "npm:^6.6.7"
     swc-loader: "npm:^0.2.6"
-    turbo: "npm:^1.12.5"
+    turbo: "npm:^2.2.3"
     typescript: "npm:^4.9.5"
     webpack: "npm:^5.90.3"
     webpack-cli: "npm:^4.10.0"
@@ -17270,58 +17287,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"turbo-darwin-64@npm:1.12.5":
-  version: 1.12.5
-  resolution: "turbo-darwin-64@npm:1.12.5"
+"turbo-darwin-64@npm:2.3.0":
+  version: 2.3.0
+  resolution: "turbo-darwin-64@npm:2.3.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-darwin-arm64@npm:1.12.5":
-  version: 1.12.5
-  resolution: "turbo-darwin-arm64@npm:1.12.5"
+"turbo-darwin-arm64@npm:2.3.0":
+  version: 2.3.0
+  resolution: "turbo-darwin-arm64@npm:2.3.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-linux-64@npm:1.12.5":
-  version: 1.12.5
-  resolution: "turbo-linux-64@npm:1.12.5"
+"turbo-linux-64@npm:2.3.0":
+  version: 2.3.0
+  resolution: "turbo-linux-64@npm:2.3.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-linux-arm64@npm:1.12.5":
-  version: 1.12.5
-  resolution: "turbo-linux-arm64@npm:1.12.5"
+"turbo-linux-arm64@npm:2.3.0":
+  version: 2.3.0
+  resolution: "turbo-linux-arm64@npm:2.3.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-windows-64@npm:1.12.5":
-  version: 1.12.5
-  resolution: "turbo-windows-64@npm:1.12.5"
+"turbo-windows-64@npm:2.3.0":
+  version: 2.3.0
+  resolution: "turbo-windows-64@npm:2.3.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-windows-arm64@npm:1.12.5":
-  version: 1.12.5
-  resolution: "turbo-windows-arm64@npm:1.12.5"
+"turbo-windows-arm64@npm:2.3.0":
+  version: 2.3.0
+  resolution: "turbo-windows-arm64@npm:2.3.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo@npm:^1.12.5":
-  version: 1.12.5
-  resolution: "turbo@npm:1.12.5"
+"turbo@npm:^2.2.3":
+  version: 2.3.0
+  resolution: "turbo@npm:2.3.0"
   dependencies:
-    turbo-darwin-64: "npm:1.12.5"
-    turbo-darwin-arm64: "npm:1.12.5"
-    turbo-linux-64: "npm:1.12.5"
-    turbo-linux-arm64: "npm:1.12.5"
-    turbo-windows-64: "npm:1.12.5"
-    turbo-windows-arm64: "npm:1.12.5"
+    turbo-darwin-64: "npm:2.3.0"
+    turbo-darwin-arm64: "npm:2.3.0"
+    turbo-linux-64: "npm:2.3.0"
+    turbo-linux-arm64: "npm:2.3.0"
+    turbo-windows-64: "npm:2.3.0"
+    turbo-windows-arm64: "npm:2.3.0"
   dependenciesMeta:
     turbo-darwin-64:
       optional: true
@@ -17337,7 +17354,7 @@ __metadata:
       optional: true
   bin:
     turbo: bin/turbo
-  checksum: 10/16eee9455f69d66c783050f67f5519d365297f89ff5f5fe6380a401ff9ac508a58cdc1a42f84603c4b820cfe8c2117d78fa8d9b0d5d68e306b7b89921467e52c
+  checksum: 10/adabcc54514d0b670caea01c6de088da2f78ef8b4f1e204799c4602aee958148d2f5f29885f49129a8d127a00832a99635af2518ee692ca6b788e2e424bb5b74
   languageName: node
   linkType: hard
 
