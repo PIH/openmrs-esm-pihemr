@@ -17,7 +17,7 @@ const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceProps> = ({ wardPati
   }, []);
 
   if (patient && visit) {
-    const src = `/openmrs/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`;
+    const src = `${window.openmrsBase}/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`;
     return (
       <div className={styles.iframeWrapper}>
         <iframe ref={iframeRef} src={src} onLoad={onLoad} className={styles.o2Iframe} />
