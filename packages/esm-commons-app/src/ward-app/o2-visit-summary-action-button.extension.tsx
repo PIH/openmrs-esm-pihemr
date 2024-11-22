@@ -1,4 +1,4 @@
-import { ActionMenuButton, launchWorkspace, UserAvatarIcon } from '@openmrs/esm-framework';
+import { ActionMenuButton, CalendarHeatMapIcon, launchWorkspace } from '@openmrs/esm-framework';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WardPatientWorkspaceProps } from './types';
@@ -8,7 +8,7 @@ export default function WardPatientActionButton() {
 
   return (
     <ActionMenuButton
-      getIcon={(props) => <UserAvatarIcon {...props} />}
+      getIcon={(props) => <CalendarHeatMapIcon {...props} />}
       label={t('visitSummary', 'Visit summary')}
       iconDescription={t('patientVisitSummary', 'Patient visit summary')}
       handler={() => launchWorkspace<WardPatientWorkspaceProps>('o2-visit-summary-workspace')}

@@ -27,4 +27,9 @@ export const o2VisitSummaryWorkspace = getAsyncLifecycle(
   options,
 );
 
+export const o2PregnancyInfantDashboard = getAsyncLifecycle(
+  () => import('./ward-app/o2-pregnancy-infant-dashboard.extension'),
+  options,
+);
+
 export function startupApp() {}
