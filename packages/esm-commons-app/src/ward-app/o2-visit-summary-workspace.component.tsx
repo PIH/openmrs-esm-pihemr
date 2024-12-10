@@ -1,30 +1,35 @@
-import React, { useCallback, useRef } from 'react';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import O2IFrame from './o2-iframe.component';
 import { type WardPatientWorkspaceProps } from './types';
-import styles from './o2-visit-summary-workspace.scss';
+
+const LABOUR_DELIVERY_SUMMARY_ENCOUNTER_TYPE = 'fec2cc56-e35f-42e1-8ae3-017142c1ca59';
+const MATERNAL_ADMISSION_ENCOUNTER_TYPE = '0ef67d23-0cf4-4a3e-8617-ac9d55bdd005';
+const POSTPARTUM_DAILY_PROGRESS = '37f04ddf-9653-4a02-98b4-1c23734c2f15';
+
+const toClass = (encounterUuid: string) => '.encounterType-' + encounterUuid;
 
 const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceProps> = ({ wardPatient }) => {
   const { patient, visit } = wardPatient ?? {};
-  const iframeRef = useRef<HTMLIFrameElement>();
 
-  // hide the headers breadcrumbs and visit actions from
-  const onLoad = useCallback(() => {
-    const dashboard = iframeRef.current.contentDocument;
-    const elementsToHide = ['header', '.patient-header', '#breadcrumbs', '.visit-actions', '#choose-another-visit'];
+  const { t } = useTranslation();
 
-    const styleTag = dashboard.createElement('style');
-    styleTag.innerHTML = elementsToHide.map((e) => `${e} {display: none;}`).join('\n');
-    dashboard.head.appendChild(styleTag);
-  }, []);
+  const elementsToHide = [
+    'header',
+    '.patient-header',
+    '#breadcrumbs',
+    '.visit-actions',
+    '#choose-another-visit',
+    toClass(LABOUR_DELIVERY_SUMMARY_ENCOUNTER_TYPE),
+    toClass(MATERNAL_ADMISSION_ENCOUNTER_TYPE),
+    toClass(POSTPARTUM_DAILY_PROGRESS),
+  ];
 
   if (patient && visit) {
     const src = `${window.openmrsBase}/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`;
-    return (
-      <div className={styles.iframeWrapper}>
-        <iframe ref={iframeRef} src={src} onLoad={onLoad} className={styles.o2Iframe} />
-      </div>
-    );
+    return <O2IFrame src={src} elementsToHide={elementsToHide} />;
   } else {
-    return;
+    return <div>{t('patientHasNoActiveVisit', 'Patient has no active visit')}</div>;
   }
 };
 
