@@ -22,7 +22,8 @@
       "type": "o2-visit-summary",
       "sidebarFamily": "ward-patient",
       "hasOwnSidebar": true,
-      "width": "extra-wide"
+      "width": "extra-wide",
+      "groups": ["ward-patient"]
     }
   ]
 }
