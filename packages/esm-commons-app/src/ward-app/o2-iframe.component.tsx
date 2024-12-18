@@ -16,9 +16,14 @@ interface O2IFrame {
    * a list of css selectors defining elements to be made un-clickable within the iframe
    */
   elementsToDisable?: string[];
+
+  /**
+   * JavaScript code to inject into the iframe to run
+   */
+  customJavaScript?: string;
 }
 
-const O2IFrame: React.FC<O2IFrame> = ({ src, elementsToHide, elementsToDisable }) => {
+const O2IFrame: React.FC<O2IFrame> = ({ src, elementsToHide, elementsToDisable, customJavaScript = '' }) => {
   const iframeRef = useRef<HTMLIFrameElement>();
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [isGoingBack, setIsGoingBack] = useState(false);
@@ -32,7 +37,7 @@ const O2IFrame: React.FC<O2IFrame> = ({ src, elementsToHide, elementsToDisable }
 
     return `@media screen {
         ${toHide}
-        ${toDisable}
+        ${toDisable} 
       }`;
   }, [elementsToHide, elementsToDisable]);
 
@@ -48,6 +53,10 @@ const O2IFrame: React.FC<O2IFrame> = ({ src, elementsToHide, elementsToDisable }
     const styleTag = contentDocument.createElement('style');
     styleTag.innerHTML = customCss;
     contentDocument.head.appendChild(styleTag);
+
+    const scriptTag = contentDocument.createElement('script');
+    scriptTag.innerHTML = customJavaScript;
+    contentDocument.body.appendChild(scriptTag);
   };
 
   const goBack = () => {

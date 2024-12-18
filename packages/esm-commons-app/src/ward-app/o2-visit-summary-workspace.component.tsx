@@ -24,10 +24,15 @@ const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceProps> = ({ wardPati
     toClass(MATERNAL_ADMISSION_ENCOUNTER_TYPE),
     toClass(POSTPARTUM_DAILY_PROGRESS),
   ];
+  const customJavaScript = `
+    $('#formBreadcrumb').show();
+    $('.simple-form-ui form section').width(300);
+    $('#nav-buttons').hide();
+  `;
 
   if (patient && visit) {
     const src = `${window.openmrsBase}/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`;
-    return <O2IFrame src={src} elementsToHide={elementsToHide} />;
+    return <O2IFrame src={src} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />;
   } else {
     return <div>{t('patientHasNoActiveVisit', 'Patient has no active visit')}</div>;
   }
