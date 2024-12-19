@@ -25,9 +25,9 @@ const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceProps> = ({ wardPati
     toClass(POSTPARTUM_DAILY_PROGRESS),
   ];
   const customJavaScript = `
-    $('#formBreadcrumb').show();
-    $('.simple-form-ui form section').width(300);
-    $('#nav-buttons').hide();
+    jQuery('#formBreadcrumb').show();
+    jQuery('.simple-form-ui form section').width(300);
+    jQuery('#nav-buttons').hide();
   `;
 
   if (patient && visit) {
