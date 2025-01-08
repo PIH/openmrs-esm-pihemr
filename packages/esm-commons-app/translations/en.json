@@ -1,5 +1,6 @@
 {
   "back": "Back",
+  "fullPatientChart": "Full patient chart",
   "patientHasNoActiveVisit": "Patient has no active visit",
   "patientNotEnrolledInInfantOrPregnancyProgram": "Patient not enrolled in either Infant or Pregnancy Program",
   "patientVisitSummary": "Patient visit summary",

@@ -51,7 +51,9 @@ const O2PregnancyInfantProgramDashboard: React.FC<{ patientUuid: string }> = ({ 
 
   const o2PatientChartLink = (
     <div className={styles.patientChartLinkContainer}>
-      <a href={`/openmrs/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}`}>Full patient chart</a>
+      <a href={`${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}`}>
+        {t('fullPatientChart', 'Full patient chart')}
+      </a>
     </div>
   );
 
