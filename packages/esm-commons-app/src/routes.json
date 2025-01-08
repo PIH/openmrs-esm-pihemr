@@ -23,7 +23,8 @@
       "sidebarFamily": "ward-patient",
       "hasOwnSidebar": true,
       "width": "extra-wide",
-      "groups": ["ward-patient"]
+      "groups": ["ward-patient"],
+      "canMaximize": true
     }
   ]
 }
