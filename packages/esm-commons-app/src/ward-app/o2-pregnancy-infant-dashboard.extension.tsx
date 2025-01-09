@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useActivePatientEnrollment } from '../hooks/useProgramEnrollment';
 import O2IFrame from './o2-iframe.component';
+import styles from './o2-pregnancy-infant-dashboard.scss';
 
 /**
  * Extension to display either the O2 pregnancy program or infant program dashboard,
@@ -48,17 +49,36 @@ const O2PregnancyInfantProgramDashboard: React.FC<{ patientUuid: string }> = ({ 
     '.infant\\.dashboard\\.indicator a',
   ];
 
+  const o2PatientChartLink = (
+    <div className={styles.patientChartLinkContainer}>
+      <a href={`${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}`}>
+        {t('fullPatientChart', 'Full patient chart')}
+      </a>
+    </div>
+  );
+
   if (isLoading) {
     return <InlineLoading />;
   } else if (inInfantProgram) {
     const src = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&dashboard=${infantProgramUuid}`;
-    return <O2IFrame key={patientUuid} {...{ src, elementsToDisable, elementsToHide }} />;
+    return (
+      <>
+        {o2PatientChartLink}
+        <O2IFrame key={patientUuid} {...{ src, elementsToDisable, elementsToHide }} />
+      </>
+    );
   } else if (inPregnancyProgram) {
     const src = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&dashboard=${pregnancyProgramUuid}`;
-    return <O2IFrame key={patientUuid} {...{ src, elementsToDisable, elementsToHide }} />;
+    return (
+      <>
+        {o2PatientChartLink}
+        <O2IFrame key={patientUuid} {...{ src, elementsToDisable, elementsToHide }} />
+      </>
+    );
   } else {
     return (
       <div>
+        {o2PatientChartLink}
         {t(
           'patientNotEnrolledInInfantOrPregnancyProgram',
           'Patient not enrolled in either Infant or Pregnancy Program',
