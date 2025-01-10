@@ -1,8 +1,16 @@
 {
   "back": "Back",
+  "delete": "Delete",
+  "edit": "Edit",
+  "errorLoadingPatientForm": "Error loading patient form",
   "fullPatientChart": "Full patient chart",
   "patientHasNoActiveVisit": "Patient has no active visit",
   "patientNotEnrolledInInfantOrPregnancyProgram": "Patient not enrolled in either Infant or Pregnancy Program",
   "patientVisitSummary": "Patient visit summary",
+  "removePatient": "Remove patient",
+  "transition": "Transition",
+  "triage": "Triage",
+  "triageFormSubmitted": "Triage form successfully submitted for {{patient}}.",
+  "undoTransition": "Undo transition",
   "visitSummary": "Visit summary"
 }
