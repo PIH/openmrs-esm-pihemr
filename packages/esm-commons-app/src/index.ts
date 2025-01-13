@@ -8,10 +8,6 @@
 import { getAsyncLifecycle } from '@openmrs/esm-framework';
 
 const moduleName = '@pih/esm-commons-app';
-const options = {
-  featureName: 'commons',
-  moduleName,
-};
 
 export const importTranslation = require.context('../translations', false, /.json$/, 'lazy');
 
@@ -19,17 +15,27 @@ export const importTranslation = require.context('../translations', false, /.jso
 
 export const o2VisitSummaryWorkspaceSideRailIcon = getAsyncLifecycle(
   () => import('./ward-app/o2-visit-summary-action-button.extension'),
-  options,
+  { featureName: 'o2VisitSummaryWorkspaceSideRailIcon', moduleName },
 );
 
 export const o2VisitSummaryWorkspace = getAsyncLifecycle(
   () => import('./ward-app/o2-visit-summary-workspace.component'),
-  options,
+  { featureName: 'o2VisitSummaryWorkspace', moduleName },
 );
 
 export const o2PregnancyInfantDashboard = getAsyncLifecycle(
   () => import('./ward-app/o2-pregnancy-infant-dashboard.extension'),
-  options,
+  { featureName: 'o2PregnancyInfantDashboard', moduleName },
+);
+
+export const maternalTriageFormWorkspace = getAsyncLifecycle(
+  () => import('./service-queues-app/maternal-triage-form.workspace'),
+  { featureName: 'maternalTriageFormWorkspace', moduleName },
+);
+
+export const triageWaitingQueueActions = getAsyncLifecycle(
+  () => import('./service-queues-app/maternal-triage-queue-actions.extension'),
+  { featureName: 'triageWaitingQueueActions', moduleName },
 );
 
 export function startupApp() {}

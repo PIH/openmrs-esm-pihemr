@@ -1,9 +1,9 @@
 import { ArrowLeft } from '@carbon/react/icons';
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import styles from './o2-iframe.scss';
 import { IconButton, InlineLoading } from '@carbon/react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import styles from './o2-iframe.scss';
 
 interface O2IFrame {
   src: string;

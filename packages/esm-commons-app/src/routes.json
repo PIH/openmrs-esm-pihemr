@@ -12,6 +12,11 @@
       "name": "o2-pregnancy-infant-dashboard",
       "component": "o2PregnancyInfantDashboard",
       "slot": "ward-patient-workspace-content-slot"
+    },
+    {
+      "name": "triage-waiting-queue-actions",
+      "component": "triageWaitingQueueActions",
+      "slot": "queue-table-triage-waiting-queue-actions-slot"
     }
   ],
   "workspaces": [
@@ -24,6 +29,14 @@
       "hasOwnSidebar": true,
       "width": "extra-wide",
       "groups": ["ward-patient"],
+      "canMaximize": true
+    },
+    {
+      "name": "maternal-triage-form-workspace",
+      "component": "maternalTriageFormWorkspace",
+      "title": "maternalTriageForm",
+      "type": "maternal-triage-form",
+      "width": "extra-wide",
       "canMaximize": true
     }
   ]
