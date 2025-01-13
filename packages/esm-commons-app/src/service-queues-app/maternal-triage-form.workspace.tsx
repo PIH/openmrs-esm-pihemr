@@ -16,8 +16,7 @@ interface MaternalTriageFormWorkspaceProps extends DefaultWorkspaceProps {
 const MATERNAL_TRIAGE_FORM_ENCOUNTER_TYPE = '41911448-71a1-43d7-bba8-dc86339850da';
 
 /**
- * Extension to display either the O2 pregnancy program or infant program dashboard,
- * if the patient is enrolled in it.
+ * Workspace to display the Maternal Triage HTML Form, rendered in a iframe
  */
 const MaternalTriageFormWorkspace: React.FC<MaternalTriageFormWorkspaceProps> = ({
   queueEntry,
@@ -69,8 +68,8 @@ const MaternalTriageFormWorkspace: React.FC<MaternalTriageFormWorkspaceProps> = 
     'header',
     '#breadcrumbs',
 
-    // prevent O2 success toast from showing; After submitting form for a patient
-    // the success toast for that patient when opening form for another patient
+    // prevent O2 success toast from showing; After submitting form for a patient,
+    // the success toast for that patient shows when opening form for another patient
     '.toast-type-success',
   ];
 
@@ -94,7 +93,7 @@ const MaternalTriageFormWorkspace: React.FC<MaternalTriageFormWorkspaceProps> = 
     // else, we load the last filled out form to edit
     const src =
       filledOutTriageForms.length == 0
-        ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&definitionUiResource=file:/home/tomcat/.OpenMRS/configuration/pih/htmlforms/triage.xml&returnUrl=%2Fopenmrs%2Fcoreapps%2Fclinicianfacing%2Fpatient.page%3FpatientId%3D${patientUuid}%26`
+        ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&definitionUiResource=file:configuration/pih/htmlforms/triage.xml&returnUrl=%2Fopenmrs%2Fcoreapps%2Fclinicianfacing%2Fpatient.page%3FpatientId%3D${patientUuid}%26`
         : `${window.openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&encounterId=${filledOutTriageForms[filledOutTriageForms.length - 1].uuid}`;
 
     return <O2IFrame key={patientUuid} src={src} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />;
