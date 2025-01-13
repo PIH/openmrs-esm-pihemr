@@ -26,7 +26,7 @@ const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceProps> = ({ wardPati
   ];
   const customJavaScript = `
     jQuery('#formBreadcrumb').show();
-    jQuery('.simple-form-ui form section').width(300);
+    jQuery('.simple-form-ui form section').width(425);
     jQuery('#nav-buttons').hide();
   `;
 
