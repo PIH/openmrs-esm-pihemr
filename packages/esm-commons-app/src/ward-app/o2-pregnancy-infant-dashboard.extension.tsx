@@ -49,41 +49,37 @@ const O2PregnancyInfantProgramDashboard: React.FC<{ patientUuid: string }> = ({ 
     '.infant\\.dashboard\\.indicator a',
   ];
 
-  const o2PatientChartLink = (
-    <div className={styles.patientChartLinkContainer}>
-      <a href={`${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}`}>
-        {t('fullPatientChart', 'Full patient chart')}
-      </a>
-    </div>
-  );
-
   if (isLoading) {
     return <InlineLoading />;
   } else if (inInfantProgram) {
-    const src = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&dashboard=${infantProgramUuid}`;
+    const infantProgramUrl = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&dashboard=${infantProgramUuid}`;
     return (
       <>
-        {o2PatientChartLink}
-        <O2IFrame key={patientUuid} {...{ src, elementsToDisable, elementsToHide }} />
+        <div className={styles.patientChartLinkContainer}>
+          <a href={infantProgramUrl}>{t('fullInfantProgram', 'Full infant program')}</a>
+        </div>
+        <O2IFrame key={patientUuid} {...{ src: infantProgramUrl, elementsToDisable, elementsToHide }} />
       </>
     );
   } else if (inPregnancyProgram) {
-    const src = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&dashboard=${pregnancyProgramUuid}`;
+    const pregnancyProgramUrl = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&dashboard=${pregnancyProgramUuid}`;
     return (
       <>
-        {o2PatientChartLink}
-        <O2IFrame key={patientUuid} {...{ src, elementsToDisable, elementsToHide }} />
+        <div className={styles.patientChartLinkContainer}>
+          <a href={pregnancyProgramUrl}>{t('fullPregnancyProgram', 'Full pregnancy program')}</a>
+        </div>
+        <O2IFrame key={patientUuid} {...{ src: pregnancyProgramUrl, elementsToDisable, elementsToHide }} />
       </>
     );
   } else {
+    const patientChartUrl = `${window.openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}`;
     return (
-      <div>
-        {o2PatientChartLink}
-        {t(
-          'patientNotEnrolledInInfantOrPregnancyProgram',
-          'Patient not enrolled in either Infant or Pregnancy Program',
-        )}
-      </div>
+      <>
+        <div className={styles.patientChartLinkContainer}>
+          <a href={patientChartUrl}>{t('fullPatientChart', 'Full patient chart')}</a>
+        </div>
+        <O2IFrame key={patientUuid} {...{ src: patientChartUrl, elementsToDisable, elementsToHide }} />
+      </>
     );
   }
 };
