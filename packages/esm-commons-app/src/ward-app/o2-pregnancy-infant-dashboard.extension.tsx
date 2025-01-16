@@ -56,7 +56,7 @@ const O2PregnancyInfantProgramDashboard: React.FC<{ patientUuid: string }> = ({ 
     return (
       <>
         <div className={styles.patientChartLinkContainer}>
-          <a href={infantProgramUrl}>{t('fullInfantProgram', 'Full infant program')}</a>
+          <a href={infantProgramUrl}>{t('fullInfantDashboard', 'Full Infant Dashboard')}</a>
         </div>
         <O2IFrame key={patientUuid} {...{ src: infantProgramUrl, elementsToDisable, elementsToHide }} />
       </>
@@ -66,7 +66,7 @@ const O2PregnancyInfantProgramDashboard: React.FC<{ patientUuid: string }> = ({ 
     return (
       <>
         <div className={styles.patientChartLinkContainer}>
-          <a href={pregnancyProgramUrl}>{t('fullPregnancyProgram', 'Full pregnancy program')}</a>
+          <a href={pregnancyProgramUrl}>{t('fullPregnancyDashboard', 'Full Pregnancy Dashboard')}</a>
         </div>
         <O2IFrame key={patientUuid} {...{ src: pregnancyProgramUrl, elementsToDisable, elementsToHide }} />
       </>
@@ -76,7 +76,7 @@ const O2PregnancyInfantProgramDashboard: React.FC<{ patientUuid: string }> = ({ 
     return (
       <>
         <div className={styles.patientChartLinkContainer}>
-          <a href={patientChartUrl}>{t('fullPatientChart', 'Full patient chart')}</a>
+          <a href={patientChartUrl}>{t('fullPatientChart', 'Full Patient Chart')}</a>
         </div>
         <O2IFrame key={patientUuid} {...{ src: patientChartUrl, elementsToDisable, elementsToHide }} />
       </>
