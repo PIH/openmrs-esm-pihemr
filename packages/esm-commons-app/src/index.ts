@@ -38,4 +38,6 @@ export const triageWaitingQueueActions = getAsyncLifecycle(
   { featureName: 'triageWaitingQueueActions', moduleName },
 );
 
+export const root = getAsyncLifecycle(() => import('./root.component'), { featureName: 'root', moduleName });
+
 export function startupApp() {}
