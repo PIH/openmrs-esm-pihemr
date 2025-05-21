@@ -8,7 +8,7 @@ export default function Root() {
       <BrowserRouter basename={window.spaBase}>
         <Routes>
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/service-queues/queue-table-by-status/:customQueueUuid" element={<QueueTableByStatus />} />
+          <Route path="/service-queues/queue-table-by-status/:queueUuid" element={<QueueTableByStatus />} />
           <Route path="/ward" element={<Ward />} />
         </Routes>
       </BrowserRouter>
@@ -26,11 +26,11 @@ function Appointments() {
 }
 
 function QueueTableByStatus() {
-  const { customQueueUuid } = useParams();
+  const { queueUuid } = useParams();
   return (
     <>
       <WorkspaceContainer overlay contextKey="service-queues" />
-      <ExtensionSlot name={'queue-table-by-status-view-slot'} state={{ customQueueUuid }} />
+      <ExtensionSlot name={'queue-table-by-status-view-slot'} state={{ queueUuid }} />
     </>
   );
 }
