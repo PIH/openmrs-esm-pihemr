@@ -8,6 +8,7 @@ export default function Root() {
       <BrowserRouter basename={window.spaBase}>
         <Routes>
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/dispensing2" element={<Dispensing />} />
           <Route path="/service-queues/queue-table-by-status/:queueUuid" element={<QueueTableByStatus />} />
           <Route path="/ward" element={<Ward />} />
         </Routes>
@@ -21,6 +22,19 @@ function Appointments() {
     <>
       <WorkspaceContainer overlay contextKey="appointments" />
       <ExtensionSlot name={'appointments-dashboard-slot'} />
+    </>
+  );
+}
+
+/**
+ * This is mounted at /dispensing2 instead of /dispensing. It's basically the same thing
+ * but without the collapsed left nav.
+ */
+function Dispensing() {
+  return (
+    <>
+      <WorkspaceContainer overlay contextKey="dispensing2" />
+      <ExtensionSlot name={'dispensing-dashboard-slot'} />
     </>
   );
 }

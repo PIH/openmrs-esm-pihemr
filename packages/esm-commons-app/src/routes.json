@@ -3,15 +3,19 @@
   "pages": [
     {
       "component": "root",
-      "route": "ward"
-    },
-    {
-      "component": "root",
       "route": "appointments"
     },
     {
       "component": "root",
       "route": "service-queues"
+    },
+    {
+      "component": "root",
+      "route": "dispensing2"
+    },
+    {
+      "component": "root",
+      "route": "ward"
     }
   ],
   "extensions": [
