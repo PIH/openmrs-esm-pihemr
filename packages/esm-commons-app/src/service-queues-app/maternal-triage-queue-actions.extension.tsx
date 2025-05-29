@@ -48,7 +48,8 @@ const MaternalTriageQueueActions: React.FC<QueueTableCellComponentProps> = ({ qu
               newStatus: inServiceStatus,
             });
             mutateQueueEntries();
-            launchWorkspace('maternal-triage-form-workspace', { queueEntry: res.data, patient });
+            const updatedQueueEntry = { ...res.data, visit: queueEntry.visit };
+            launchWorkspace('maternal-triage-form-workspace', { queueEntry: updatedQueueEntry, patient });
           } else {
             launchWorkspace('maternal-triage-form-workspace', { queueEntry, patient });
           }
