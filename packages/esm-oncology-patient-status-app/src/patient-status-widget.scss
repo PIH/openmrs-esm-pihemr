@@ -1,0 +1,7 @@
+@use "@carbon/styles/scss/spacing";
+@use "@carbon/styles/scss/type";
+@use '@openmrs/esm-styleguide/src/vars' as *;
+
+.widgetCard {
+  border: 1px solid $ui-03;
+}

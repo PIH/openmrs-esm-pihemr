@@ -1,0 +1,40 @@
+.tableContainer {
+  height: 700px;
+  overflow-x: auto;
+
+  margin: 0 1rem;
+  border: 2px solid lightgrey;
+  border-radius: 0.25rem;
+}
+
+.filtersContainer {
+  border-radius: 0.25rem;
+  margin: 0 1rem;
+  padding-top: 4%;
+}
+
+.dropdown {
+  width: 10%;
+  height: 2rem;
+  background: transparent;
+  border: 1px solid var(--omrs-color-ink-lowest-contrast);
+  background-clip: padding-box;
+  border-radius: 4px;
+  margin: 1rem;
+}
+.dropdown:disabled {
+  opacity: 0.8;
+  background: lightgrey;
+  cursor: not-allowed;
+}
+.dropdown:focus {
+  border: 2px solid var(--omrs-color-interaction);
+  outline: 0;
+}
+.textBox {
+  background: transparent;
+  border: 1px solid var(--omrs-color-ink-lowest-contrast);
+  background-clip: padding-box;
+  border-radius: 4px;
+  margin: 1rem;
+}
