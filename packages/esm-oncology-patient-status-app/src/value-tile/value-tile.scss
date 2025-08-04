@@ -1,0 +1,19 @@
+@use '@carbon/layout';
+@use '@carbon/type';
+@use '@openmrs/esm-styleguide/src/vars' as *;
+
+.label {
+	@include type.type-style('label-01');
+	color: $text-02;
+}
+
+.content {
+	@include type.type-style('body-short-01');
+	color: $text-02;
+	margin-top: 5px;
+}
+
+.value {
+	@include type.type-style('body-short-02');
+	color: $text-02;
+}
