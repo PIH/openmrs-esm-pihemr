@@ -6,6 +6,11 @@ config.additionalConfig.module= {
       test: /\.(woff|woff2|eot|ttf|otf)$/i,
       type: 'asset/resource',
     },
+    {
+      test: /\.ts$/,
+      include: /node_modules\/yoga-layout/,
+      use: 'swc-loader',
+    },
   ]
 }
 module.exports = config;
