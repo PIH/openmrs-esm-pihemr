@@ -71,6 +71,8 @@ const MaternalTriageFormWorkspace: React.FC<MaternalTriageFormWorkspaceProps> = 
     // prevent O2 success toast from showing; After submitting form for a patient,
     // the success toast for that patient shows when opening form for another patient
     '.toast-type-success',
+    // UHM-8822: remove Cancel button from the triage form
+    '.cancel',
   ];
 
   const customJavaScript = `
