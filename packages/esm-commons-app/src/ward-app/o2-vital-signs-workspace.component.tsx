@@ -26,7 +26,7 @@ const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceProps> = (props) => {
 
   const iframeSrc =
     patient && visit
-      ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patient.uuid}&visitId=${visit.uuid}&definitionUiResource=file:configuration/pih/htmlforms/inpatientVitals.xml&returnUrl=%2Fopenmrs%2Fcoreapps%2Fclinicianfacing%2Fpatient.page%3FpatientId%3D${patient.uuid}%26`
+      ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patient.uuid}&visitId=${visit.uuid}&definitionUiResource=file:configuration/pih/htmlforms/inpatientVitals.xml&returnUrl=${window.openmrsBase}/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`
       : null;
 
   return (
