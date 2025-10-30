@@ -6,6 +6,7 @@
   "fullInfantDashboard": "Full Infant Dashboard",
   "fullPatientChart": "Full patient chart",
   "fullPregnancyDashboard": "Full Pregnancy Dashboard",
+  "inpatientVitalSigns": "Inpatient vital signs",
   "patientHasNoActiveVisit": "Patient has no active visit",
   "patientVisitSummary": "Patient visit summary",
   "removePatient": "Remove patient",
@@ -13,5 +14,6 @@
   "triage": "Triage",
   "triageFormSubmitted": "Triage form successfully submitted for {{patient}}.",
   "undoTransition": "Undo transition",
-  "visitSummary": "Visit summary"
+  "visitSummary": "Visit summary",
+  "vitalSigns": "Vital signs"
 }
