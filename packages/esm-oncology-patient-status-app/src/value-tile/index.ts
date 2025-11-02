@@ -1,1 +1,1 @@
-export * from "./value-tile";
+export * from './value-tile';

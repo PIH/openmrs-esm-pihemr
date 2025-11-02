@@ -1,5 +1,5 @@
-import React from "react";
-import styles from "./value-tile.scss";
+import React from 'react';
+import styles from './value-tile.scss';
 
 export interface ValueTileProps {
   label: string;

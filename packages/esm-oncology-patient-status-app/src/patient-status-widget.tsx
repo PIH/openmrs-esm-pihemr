@@ -1,10 +1,10 @@
-import React from "react";
-import { CardHeader } from "./cards";
-import styles from "./patient-status-widget.scss";
-import { DiagnosisTile } from "./tiles/diagnosis-tile";
-import { StageTile } from "./tiles/stage-tile";
-import { TreatmentPlanTile } from "./tiles/treatment-plan-tile";
-import { NextVisitTile } from "./tiles/next-visit-tile";
+import React from 'react';
+import { CardHeader } from './cards';
+import styles from './patient-status-widget.scss';
+import { DiagnosisTile } from './tiles/diagnosis-tile';
+import { StageTile } from './tiles/stage-tile';
+import { TreatmentPlanTile } from './tiles/treatment-plan-tile';
+import { NextVisitTile } from './tiles/next-visit-tile';
 
 interface PatientDashboardWidgetProps {
   patientUuid: string;

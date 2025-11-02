@@ -1,7 +1,7 @@
-import React from "react";
-import { InlineLoading, Tile } from "@carbon/react";
-import { ValueTile } from "../value-tile";
-import { useStage } from "../patient-status-widget.resource";
+import React from 'react';
+import { InlineLoading, Tile } from '@carbon/react';
+import { ValueTile } from '../value-tile';
+import { useStage } from '../patient-status-widget.resource';
 
 interface stageTileProps {
   patientUuid: string;
@@ -15,8 +15,8 @@ export function StageTile({ patientUuid }: stageTileProps) {
       <ValueTile label="Stage">
         {isLoading ? <InlineLoading /> : null}
         {isValidating ? <InlineLoading /> : null}
-        {isError ? "Error" : null}
-        {!isLoading ? stage ?? "—" : null}
+        {isError ? 'Error' : null}
+        {!isLoading ? stage ?? '—' : null}
       </ValueTile>
     </Tile>
   );

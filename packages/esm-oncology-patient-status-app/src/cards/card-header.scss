@@ -2,7 +2,8 @@
 @use '@carbon/type';
 @use '@openmrs/esm-styleguide/src/vars' as *;
 
-.desktopHeader, .tabletHeader {
+.desktopHeader,
+.tabletHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -10,7 +11,7 @@
   background-color: $ui-background;
 
   h4:after {
-    content: "";
+    content: '';
     display: block;
     width: 2rem;
     padding-top: 0.188rem;
@@ -21,7 +22,7 @@
 .desktopHeader {
   height: 3rem;
   h4 {
-    @include type.type-style("productive-heading-02");
+    @include type.type-style('productive-heading-02');
     color: $text-02;
   }
 }
@@ -29,7 +30,7 @@
 .tabletHeader {
   height: 4.5rem;
   h4 {
-    @include type.type-style("productive-heading-03");
+    @include type.type-style('productive-heading-03');
     color: $text-02;
   }
 }

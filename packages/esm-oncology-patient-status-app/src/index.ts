@@ -5,8 +5,8 @@
  * microfrontend.
  */
 
-import { getAsyncLifecycle, defineConfigSchema } from "@openmrs/esm-framework";
-import { configSchema } from "./config-schema";
+import { getAsyncLifecycle, defineConfigSchema } from '@openmrs/esm-framework';
+import { configSchema } from './config-schema';
 
 const moduleName = '@pih/esm-oncology-patient-status-app';
 const options = {
@@ -21,4 +21,3 @@ export const root = getAsyncLifecycle(() => import('./patient-status-widget'), o
 export function startupApp() {
   defineConfigSchema(moduleName, configSchema);
 }
-
