@@ -23,6 +23,16 @@ export const o2VisitSummaryWorkspace = getAsyncLifecycle(
   { featureName: 'o2VisitSummaryWorkspace', moduleName },
 );
 
+export const o2VitalSignsWorkspaceSideRailIcon = getAsyncLifecycle(
+  () => import('./ward-app/o2-vital-signs-action-button.extension'),
+  { featureName: 'o2VitalSignsWorkspaceSideRailIcon', moduleName },
+);
+
+export const o2VitalSignsWorkspace = getAsyncLifecycle(() => import('./ward-app/o2-vital-signs-workspace.component'), {
+  featureName: 'o2VitalSignsWorkspace',
+  moduleName,
+});
+
 export const o2PregnancyInfantDashboard = getAsyncLifecycle(
   () => import('./ward-app/o2-pregnancy-infant-dashboard.extension'),
   { featureName: 'o2PregnancyInfantDashboard', moduleName },

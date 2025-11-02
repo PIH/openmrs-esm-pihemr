@@ -25,6 +25,11 @@
       "slot": "action-menu-ward-patient-items-slot"
     },
     {
+      "name": "o2-vital-signs-workspace-siderail-button",
+      "component": "o2VitalSignsWorkspaceSideRailIcon",
+      "slot": "action-menu-ward-patient-items-slot"
+    },
+    {
       "name": "o2-pregnancy-infant-dashboard",
       "component": "o2PregnancyInfantDashboard",
       "slot": "ward-patient-workspace-content-slot"
@@ -41,6 +46,17 @@
       "component": "o2VisitSummaryWorkspace",
       "title": "visitSummary",
       "type": "o2-visit-summary",
+      "sidebarFamily": "ward-patient",
+      "hasOwnSidebar": true,
+      "width": "extra-wide",
+      "groups": ["ward-patient"],
+      "canMaximize": true
+    },
+    {
+      "name": "o2-vital-signs-workspace",
+      "component": "o2VitalSignsWorkspace",
+      "title": "vitalSigns",
+      "type": "o2-vital-signs",
       "sidebarFamily": "ward-patient",
       "hasOwnSidebar": true,
       "width": "extra-wide",
