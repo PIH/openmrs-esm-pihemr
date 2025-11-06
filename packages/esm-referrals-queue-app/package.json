@@ -43,9 +43,12 @@
     "webpack": "^5.74.0"
   },
   "peerDependencies": {
-    "@openmrs/esm-framework": "5.x",
+    "@openmrs/esm-framework": "8.x",
     "i18next": "^19.0.0",
-    "react": "18.x"
+    "react": "18.x",
+    "react-i18next": "16.x",
+    "react-router-dom": "^6.x",
+    "swr": "2.x"
   },
   "devDependencies": {
     "webpack": "^5.74.0"

@@ -1,13 +1,11 @@
-/** At present, this entire mock is boilerplate. */
-
 const React = require('react');
 const reactI18next = require('react-i18next');
 
-const hasChildren = node => node && (node.children || (node.props && node.props.children));
+const hasChildren = (node) => node && (node.children || (node.props && node.props.children));
 
-const getChildren = node => (node && node.children ? node.children : node.props && node.props.children);
+const getChildren = (node) => (node && node.children ? node.children : node.props && node.props.children);
 
-const renderNodes = reactNodes => {
+const renderNodes = (reactNodes) => {
   if (typeof reactNodes === 'string') {
     return reactNodes;
   }
@@ -31,16 +29,25 @@ const renderNodes = reactNodes => {
   });
 };
 
-const useMock = [k => k, {}];
-useMock.t = (k, o) => (o && o.defaultValue) || (typeof o === 'string' ? o : k);
-useMock.i18n = {};
+const useMock = [(key) => key, {}];
+useMock.t = (key, defaultValue, options = {}) => {
+  let translatedString = defaultValue || key;
+  Object.entries(options).forEach(([k, v]) => {
+    if (key !== 'interpolation') {
+      translatedString = translatedString.replace(new RegExp(`{{${k}}}`, 'g'), v);
+    }
+  });
+
+  return translatedString;
+};
+
+useMock.i18n = { language: 'en_US' };
 
 module.exports = {
   // this mock makes sure any components using the translate HoC receive the t function as a prop
-  Trans: ({ children }) => renderNodes(children),
-  Translation: ({ children }) => children(k => k, { i18n: {} }),
+  Trans: ({ children }) => (Array.isArray(children) ? renderNodes(children) : renderNodes([children])),
+  Translation: ({ children }) => children((k) => k, { i18n: {} }),
   useTranslation: () => useMock,
-
   // mock if needed
   I18nextProvider: reactI18next.I18nextProvider,
   initReactI18next: reactI18next.initReactI18next,
