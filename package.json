@@ -58,8 +58,8 @@
     "swr": "2.2.5",
     "turbo": "^2.2.3",
     "typescript": "^5.0.0",
-    "webpack": "^5.90.3",
-    "webpack-cli": "^4.10.0"
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "eslint --cache --fix"

@@ -1,21 +1,13 @@
-import '@testing-library/jest-dom/extend-expect';
+// Polyfills required for @react-pdf/renderer in Jest environment
+import { TextEncoder, TextDecoder } from 'util';
+import React from 'react';
 
-jest.mock('@openmrs/esm-framework', () => {
-  const originalModule = jest.requireActual('@openmrs/esm-framework');
+(global as any).TextEncoder = TextEncoder;
+(global as any).TextDecoder = TextDecoder;
 
-  return {
-    ...originalModule,
-    useConfig: jest.fn(() => {
-      return {
-        links: {
-          patientDash:
-            '${openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&app=pih.app.clinicianDashboard',
-          visitPage:
-            '${openmrsBase}/pihcore/visit/visit.page?patient=${patientUuid}&visit=${visitUuid}&suppressActions=true#/overview',
-        },
-      };
-    }),
-  };
-});
-
-window.getOpenmrsSpaBase = () => 'openmrs/spa';
+// Mock PDFDownloadLink to prevent PDF generation during tests
+jest.mock('@react-pdf/renderer', () => ({
+  ...jest.requireActual('@react-pdf/renderer'),
+  PDFDownloadLink: ({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', { 'data-testid': 'pdf-download-link' }, children),
+}));

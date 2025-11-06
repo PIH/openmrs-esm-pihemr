@@ -26,13 +26,11 @@ import {
   updateSampleStatusChangeObs,
   postReferralStatusChangeObs,
   updateReferralStatusChangeObs,
-  EncounterResult,
-  getUser,
-  Concept,
-  getEncounter,
+  type Concept,
+  type EncounterResult,
 } from '../Pathology-getter/ReportComponent.resource';
 import MyDocument from '../Print-to-PDF/Document-Component';
-import { Config } from '../config-schema';
+import { type Config } from '../config-schema';
 
 const ReportComponent = () => {
   const config = useConfig() as Config;
