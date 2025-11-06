@@ -1,13 +1,18 @@
-import { defineConfigSchema } from '@openmrs/esm-framework';
 import React from 'react';
 import { of } from 'rxjs';
 import { render, fireEvent, screen, within, waitFor } from '@testing-library/react';
 import MockDate from 'mockdate';
 import ReferralsQueue from './referrals-queue.component';
 import { getReferrals } from './referrals-queue.resource';
-import { configSchema } from '../config-schema';
+
+const mockedUseConfig = jest.fn();
 
 jest.mock('./referrals-queue.resource');
+jest.mock('@openmrs/esm-framework', () => ({
+  ...jest.requireActual('@openmrs/esm-framework'),
+  useConfig: () => mockedUseConfig(),
+}));
+
 const mockedGetReferrals = getReferrals as jest.Mock;
 
 const referrals = [
@@ -58,7 +63,17 @@ window.location = { href: '/referrals-queue' };
 describe('referrals queue', () => {
   const todayString = '2020-10-31';
   beforeAll(() => {
-    defineConfigSchema('@pih/esm-referral-queues-app', configSchema);
+    mockedUseConfig.mockReturnValue({
+      links: {
+        patientDash:
+          '${openmrsBase}/coreapps/clinicianfacing/patient.page?patientId=${patientUuid}&app=pih.app.clinicianDashboard',
+        visitPage:
+          '${openmrsBase}/pihcore/visit/visit.page?patient=${patientUuid}&visit=${visitUuid}&suppressActions=true#/overview',
+        homeVisitForm:
+          '${openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=/mirebalais/spa/referrals-queue',
+      },
+      pendingStatuses: ['Pending status', 'Referral unmet'],
+    });
   });
   beforeEach(() => {
     MockDate.set(todayString + 'T10:00:00.000-0400');
