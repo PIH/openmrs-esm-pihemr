@@ -1,8 +1,8 @@
 {
-  "name": "@pih/esm-commons-app",
-  "version": "1.0.0",
-  "description": "An app to define extensions to be slotted into other apps that are not PIH specific.",
-  "browser": "dist/pih-esm-commons-app.js",
+  "name": "@pih/esm-pathology-app",
+  "version": "1.1.0",
+  "description": "A pathology app for IMB OpenMRS",
+  "browser": "dist/pih-esm-pathology-app.js",
   "main": "src/index.ts",
   "source": true,
   "license": "MPL-2.0",
@@ -18,7 +18,7 @@
     "test:watch": "cross-env TZ=UTC jest --watch --config jest.config.js --color",
     "coverage": "yarn test --coverage",
     "typescript": "tsc",
-    "extract-translations": "i18next 'src/**/*.component.tsx' 'src/**/*.extension.tsx' 'src/**/*modal.tsx' 'src/**/*.workspace.tsx' 'src/index.ts' --config ../../tools/i18next-parser.config.js"
+    "extract-translations": "i18next 'src/**/*.component.tsx'"
   },
   "browserslist": [
     "extends browserslist-config-openmrs"
@@ -26,26 +26,32 @@
   "keywords": [
     "openmrs"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PIH/openmrs-esm-pihemr.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "bugs": {
     "url": "https://github.com/PIH/openmrs-esm-pihemr/issues"
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
+    "@carbon/react": "~1.37.0",
+    "@react-pdf/renderer": "3.0.0",
     "moment": "^2.30.1",
     "react-dates": "^21.8.0",
+    "react-pdf": "5.7.2",
     "webpack": "^5.74.0"
   },
   "peerDependencies": {
     "@openmrs/esm-framework": "5.x",
     "i18next": "^19.0.0",
-    "react": "18.x"
+    "react": "18.x",
+    "react-i18next": "11.x",
+    "react-router-dom": "^6.x",
+    "swr": "2.x"
   },
   "devDependencies": {
     "webpack": "^5.74.0"
