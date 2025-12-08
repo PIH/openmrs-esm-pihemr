@@ -1,11 +1,10 @@
-import { ExtensionSlot } from '@openmrs/esm-framework';
+import { ExtensionSlot, Workspace2 } from '@openmrs/esm-framework';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import O2IFrame from './o2-iframe.component';
-import type { WardPatientWorkspaceProps } from './types';
+import type { WardPatientWorkspaceDefinition } from './types';
 
-const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceProps> = (props) => {
-  const { wardPatient } = props;
+const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ groupProps: { wardPatient } }) => {
   const { patient, visit } = wardPatient ?? {};
 
   const { t } = useTranslation();
@@ -30,14 +29,14 @@ const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceProps> = (props) => {
       : null;
 
   return (
-    <>
+    <Workspace2 title={t('vitalSigns', 'Vital signs')} hasUnsavedChanges={false}>
       <ExtensionSlot name="ward-workspace-patient-banner-slot" state={{ wardPatient }} />
       {iframeSrc ? (
         <O2IFrame src={iframeSrc} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />
       ) : (
         <div>{t('patientHasNoActiveVisit', 'Patient has no active visit')}</div>
       )}
-    </>
+    </Workspace2>
   );
 };
 

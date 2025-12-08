@@ -20,16 +20,6 @@
   ],
   "extensions": [
     {
-      "name": "o2-visit-summary-workspace-siderail-button",
-      "component": "o2VisitSummaryWorkspaceSideRailIcon",
-      "slot": "action-menu-ward-patient-items-slot"
-    },
-    {
-      "name": "o2-vital-signs-workspace-siderail-button",
-      "component": "o2VitalSignsWorkspaceSideRailIcon",
-      "slot": "action-menu-ward-patient-items-slot"
-    },
-    {
       "name": "o2-pregnancy-infant-dashboard",
       "component": "o2PregnancyInfantDashboard",
       "slot": "ward-patient-workspace-content-slot"
@@ -40,34 +30,41 @@
       "slot": "queue-table-triage-waiting-queue-actions-slot"
     }
   ],
-  "workspaces": [
+  "workspaces2": [
     {
       "name": "o2-visit-summary-workspace",
       "component": "o2VisitSummaryWorkspace",
-      "title": "visitSummary",
-      "type": "o2-visit-summary",
-      "sidebarFamily": "ward-patient",
-      "hasOwnSidebar": true,
-      "width": "extra-wide",
-      "groups": ["ward-patient"],
-      "canMaximize": true
+      "window": "o2-visit-summary-window"
     },
     {
       "name": "o2-vital-signs-workspace",
       "component": "o2VitalSignsWorkspace",
-      "title": "vitalSigns",
-      "type": "o2-vital-signs",
-      "sidebarFamily": "ward-patient",
-      "hasOwnSidebar": true,
-      "width": "extra-wide",
-      "groups": ["ward-patient"],
-      "canMaximize": true
+      "window": "o2-vital-signs-window"
     },
     {
       "name": "maternal-triage-form-workspace",
       "component": "maternalTriageFormWorkspace",
-      "title": "maternalTriageForm",
-      "type": "maternal-triage-form",
+      "window": "maternal-triage-form-window"
+    }
+  ],
+  "workspaceWindows2": [
+    {
+      "name": "o2-visit-summary-window",
+      "icon": "o2VisitSummaryWorkspaceSideRailIcon",
+      "group": "ward-patient",
+      "width": "extra-wide",
+      "canMaximize": true
+    },
+    {
+      "name": "o2-vital-signs-window",
+      "icon": "o2VitalSignsWorkspaceSideRailIcon",
+      "group": "ward-patient",
+      "width": "extra-wide",
+      "canMaximize": true
+    },
+    {
+      "name": "maternal-triage-form-window",
+      "group": "service-queues",
       "width": "extra-wide",
       "canMaximize": true
     }

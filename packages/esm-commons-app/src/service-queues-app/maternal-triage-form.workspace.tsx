@@ -1,4 +1,4 @@
-import { type DefaultWorkspaceProps, type Patient, showSnackbar } from '@openmrs/esm-framework';
+import { type Patient, showSnackbar, Workspace2, type Workspace2DefinitionProps } from '@openmrs/esm-framework';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import O2IFrame from '../ward-app/o2-iframe.component';
@@ -8,7 +8,7 @@ import { useEncounters } from '../hooks/useEncounters';
 import { Loading } from '@carbon/react';
 import { InlineNotification } from '@carbon/react';
 
-interface MaternalTriageFormWorkspaceProps extends DefaultWorkspaceProps {
+interface MaternalTriageFormWorkspaceProps {
   queueEntry: QueueEntry;
   patient: Patient;
 }
@@ -18,9 +18,8 @@ const MATERNAL_TRIAGE_FORM_ENCOUNTER_TYPE = '41911448-71a1-43d7-bba8-dc86339850d
 /**
  * Workspace to display the Maternal Triage HTML Form, rendered in a iframe
  */
-const MaternalTriageFormWorkspace: React.FC<MaternalTriageFormWorkspaceProps> = ({
-  queueEntry,
-  patient,
+const MaternalTriageFormWorkspace: React.FC<Workspace2DefinitionProps<MaternalTriageFormWorkspaceProps>> = ({
+  workspaceProps: { queueEntry, patient },
   closeWorkspace,
 }) => {
   const { t } = useTranslation();
@@ -98,7 +97,14 @@ const MaternalTriageFormWorkspace: React.FC<MaternalTriageFormWorkspaceProps> = 
         ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&definitionUiResource=file:configuration/pih/htmlforms/triage.xml&returnUrl=%2Fopenmrs%2Fcoreapps%2Fclinicianfacing%2Fpatient.page%3FpatientId%3D${patientUuid}%26`
         : `${window.openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&encounterId=${filledOutTriageForms[filledOutTriageForms.length - 1].uuid}`;
 
-    return <O2IFrame key={patientUuid} src={src} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />;
+    return (
+      <Workspace2
+        title={t('maternalTriageForm', 'Maternal triage form')}
+        hasUnsavedChanges={true} // assume there are unsaved changes to prevent accidental closure
+      >
+        <O2IFrame key={patientUuid} src={src} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />
+      </Workspace2>
+    );
   }
 };
 
