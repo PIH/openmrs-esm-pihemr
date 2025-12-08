@@ -1,4 +1,4 @@
-import type { DefaultWorkspaceProps, Patient, Visit } from '@openmrs/esm-framework';
+import type { Patient, Visit, Workspace2DefinitionProps } from '@openmrs/esm-framework';
 
 // stripped down versions of the same types defined in esm-ward-app
 
@@ -8,9 +8,7 @@ export type WardPatient = {
   // other fields not typed
 };
 
-export interface WardPatientWorkspaceProps extends DefaultWorkspaceProps {
-  wardPatient: WardPatient;
-}
+export type WardPatientWorkspaceDefinition = Workspace2DefinitionProps<{}, {}, { wardPatient: WardPatient }>;
 
 export interface PatientAndAdmission {
   patient: Patient;

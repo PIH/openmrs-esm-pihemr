@@ -1,5 +1,5 @@
 import { Button, OverflowMenu, OverflowMenuItem } from '@carbon/react';
-import { isDesktop, launchWorkspace, showModal, useConfig, useLayoutType } from '@openmrs/esm-framework';
+import { isDesktop, launchWorkspace2, showModal, useConfig, useLayoutType } from '@openmrs/esm-framework';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './maternal-trial-queue-actions.scss';
@@ -49,9 +49,9 @@ const MaternalTriageQueueActions: React.FC<QueueTableCellComponentProps> = ({ qu
             });
             mutateQueueEntries();
             const updatedQueueEntry = { ...res.data, visit: queueEntry.visit };
-            launchWorkspace('maternal-triage-form-workspace', { queueEntry: updatedQueueEntry, patient });
+            launchWorkspace2('maternal-triage-form-workspace', { queueEntry: updatedQueueEntry, patient });
           } else {
-            launchWorkspace('maternal-triage-form-workspace', { queueEntry, patient });
+            launchWorkspace2('maternal-triage-form-workspace', { queueEntry, patient });
           }
         }}
         size={isDesktop(layout) ? 'sm' : 'lg'}>

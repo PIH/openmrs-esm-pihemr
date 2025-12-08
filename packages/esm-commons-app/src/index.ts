@@ -11,10 +11,8 @@ const moduleName = '@pih/esm-commons-app';
 
 export const importTranslation = require.context('../translations', false, /.json$/, 'lazy');
 
-// export const root = getAsyncLifecycle(() => import('./root.component'), options);
-
 export const o2VisitSummaryWorkspaceSideRailIcon = getAsyncLifecycle(
-  () => import('./ward-app/o2-visit-summary-action-button.extension'),
+  () => import('./ward-app/o2-visit-summary-action-button.component'),
   { featureName: 'o2VisitSummaryWorkspaceSideRailIcon', moduleName },
 );
 
@@ -24,7 +22,7 @@ export const o2VisitSummaryWorkspace = getAsyncLifecycle(
 );
 
 export const o2VitalSignsWorkspaceSideRailIcon = getAsyncLifecycle(
-  () => import('./ward-app/o2-vital-signs-action-button.extension'),
+  () => import('./ward-app/o2-vital-signs-action-button.component'),
   { featureName: 'o2VitalSignsWorkspaceSideRailIcon', moduleName },
 );
 
@@ -47,7 +45,5 @@ export const triageWaitingQueueActions = getAsyncLifecycle(
   () => import('./service-queues-app/maternal-triage-queue-actions.extension'),
   { featureName: 'triageWaitingQueueActions', moduleName },
 );
-
-export const root = getAsyncLifecycle(() => import('./root.component'), { featureName: 'root', moduleName });
 
 export function startupApp() {}
