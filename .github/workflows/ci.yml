@@ -9,6 +9,10 @@ on:
     types:
       - created
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -84,17 +88,7 @@ jobs:
       - run: git add . && git commit -m "Prerelease version" --no-verify
 
       - name: Pre-release
-        run: yarn config set npmAuthToken "${NODE_AUTH_TOKEN}" && yarn run ci:prepublish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: packages
-          path: |
-            packages/**/dist
-          overwrite: true
+        run: yarn run ci:prepublish
 
   release:
     runs-on: ubuntu-latest
@@ -123,6 +117,4 @@ jobs:
         run: yarn install --immutable
 
       - run: yarn turbo run build --color
-      - run: yarn config set npmAuthToken "${NODE_AUTH_TOKEN}" && yarn run ci:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - run: yarn run ci:publish
