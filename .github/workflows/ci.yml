@@ -26,6 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -57,6 +58,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -94,14 +96,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          registry-url: "https://registry.npmjs.org"
-
-      - run: npm install -g npm@latest
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --immutable
 
       - run: yarn turbo run build --color
-      - run: yarn config set npmAuthToken "${NODE_AUTH_TOKEN}" && yarn run ci:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: yarn run ci:publish
