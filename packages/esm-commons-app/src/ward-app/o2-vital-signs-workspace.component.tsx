@@ -1,6 +1,7 @@
 import { ExtensionSlot, Workspace2 } from '@openmrs/esm-framework';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 import O2IFrame from './o2-iframe.component';
 import type { WardPatientWorkspaceDefinition } from './types';
 
@@ -8,6 +9,26 @@ const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ group
   const { patient, visit } = wardPatient ?? {};
 
   const { t } = useTranslation();
+
+  const getPatientAgeInWeeks = (
+    patient: { birthdate?: string | Date } | null | undefined,
+    currentDate: dayjs.ConfigType = dayjs(),
+  ): number | null => {
+    const birthDate = patient?.birthdate;
+    if (birthDate == null) {
+      return null;
+    }
+    const birth = dayjs(birthDate);
+    const now = dayjs(currentDate);
+    const weeks = now.diff(birth, 'week');
+    return weeks;
+  };
+
+  const vitalSignsFormName =
+    getPatientAgeInWeeks(patient?.person, visit?.startDatetime) !== null &&
+    getPatientAgeInWeeks(patient?.person, visit?.startDatetime)! < 6
+      ? 'inpatientNewbornVitals.xml'
+      : 'inpatientVitals.xml';
 
   const elementsToHide = [
     'header',
@@ -25,7 +46,7 @@ const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ group
 
   const iframeSrc =
     patient && visit
-      ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patient.uuid}&visitId=${visit.uuid}&definitionUiResource=file:configuration/pih/htmlforms/inpatientVitals.xml&returnUrl=${window.openmrsBase}/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`
+      ? `${window.openmrsBase}/htmlformentryui/htmlform/enterHtmlFormWithStandardUi.page?patientId=${patient.uuid}&visitId=${visit.uuid}&definitionUiResource=file:configuration/pih/htmlforms/${vitalSignsFormName}&returnUrl=${window.openmrsBase}/pihcore/visit/visit.page?patient=${patient.uuid}&visit=${visit.uuid}`
       : null;
 
   return (
