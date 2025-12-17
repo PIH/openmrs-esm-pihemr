@@ -10,23 +10,20 @@ const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ group
 
   const { t } = useTranslation();
 
-  const getPatientAgeInWeeks = (
-    patient: { birthdate?: string | Date } | null | undefined,
-    currentDate: dayjs.ConfigType = dayjs(),
-  ): number | null => {
+  const getPatientAgeInWeeks = (patient: { birthdate?: string | Date } | null | undefined): number | null => {
     const birthDate = patient?.birthdate;
     if (birthDate == null) {
       return null;
     }
     const birth = dayjs(birthDate);
-    const now = dayjs(currentDate);
+    const now = dayjs();
     const weeks = now.diff(birth, 'week');
     return weeks;
   };
 
+  // for patients under 6 weeks, use the newborn vitals form
   const vitalSignsFormName =
-    getPatientAgeInWeeks(patient?.person, visit?.startDatetime) !== null &&
-    getPatientAgeInWeeks(patient?.person, visit?.startDatetime)! < 6
+    getPatientAgeInWeeks(patient?.person) !== null && getPatientAgeInWeeks(patient?.person)! < 6
       ? 'inpatientNewbornVitals.xml'
       : 'inpatientVitals.xml';
 
