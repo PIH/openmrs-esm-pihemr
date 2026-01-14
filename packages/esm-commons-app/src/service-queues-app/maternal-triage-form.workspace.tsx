@@ -45,7 +45,7 @@ const MaternalTriageFormWorkspace: React.FC<Workspace2DefinitionProps<MaternalTr
 
         await endQueueEntry();
         await mutateQueueEntries();
-        closeWorkspace();
+        closeWorkspace({ discardUnsavedChanges: true });
         showSnackbar({
           isLowContrast: true,
           kind: 'success',
