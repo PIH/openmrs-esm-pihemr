@@ -23,7 +23,13 @@ interface O2IFrame {
   customJavaScript?: string;
 }
 
-const O2IFrame: React.FC<O2IFrame> = ({ src, elementsToHide, elementsToDisable, customJavaScript = '' }) => {
+
+const O2IFrame: React.FC<O2IFrame> = ({
+  src,
+  elementsToHide,
+  elementsToDisable,
+  customJavaScript = '',
+}) => {
   const iframeRef = useRef<HTMLIFrameElement>();
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [isGoingBack, setIsGoingBack] = useState(false);
