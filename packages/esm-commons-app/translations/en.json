@@ -7,6 +7,8 @@
   "fullPatientChart": "Full patient chart",
   "fullPregnancyDashboard": "Full Pregnancy Dashboard",
   "maternalTriageForm": "Maternal triage form",
+  "patientDischarged": "Patient discharged",
+  "patientDischargedMessage": "{{patientName}} has been discharged from the ward.",
   "patientHasNoActiveVisit": "Patient has no active visit",
   "removePatient": "Remove patient",
   "transition": "Transition",
