@@ -104,6 +104,9 @@ export class WardPage {
   @step
   async selectBed(bedNumber: string) {
     return test.step(`When I select bed ${bedNumber} for the patient admission`, async () => {
+      if (await this.page.getByRole('combobox', { name: 'Choose an option' }).isVisible()) {
+        await this.page.getByRole('combobox', { name: 'Choose an option' }).click();
+      }
       await this.page.getByText(new RegExp(`^${bedNumber} · `)).click();
     });
   }

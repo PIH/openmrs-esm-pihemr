@@ -12,11 +12,3 @@ export const changeLocation = async (api: APIRequestContext, locationUuid: strin
   });
   await expect(locationRes.ok()).toBeTruthy();
 };
-
-export const changeToWardLocation = async (api: APIRequestContext) => {
-  return changeLocation(api, process.env.E2E_WARD_LOCATION_UUID as string);
-};
-
-export const changeToDefaultLocation = async (api: APIRequestContext) => {
-  return changeLocation(api, process.env.E2E_LOGIN_DEFAULT_LOCATION_UUID as string);
-};

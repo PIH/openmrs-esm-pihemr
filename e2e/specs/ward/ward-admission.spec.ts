@@ -1,4 +1,3 @@
-import { expect } from '@playwright/test';
 import { changeLocation, getPatientIdentifierStr, getPatientName } from '../../commands';
 import { KGHLocationsUuids, test } from '../../core';
 import { WardPage } from '../../pages';
@@ -45,7 +44,7 @@ test.describe('Ward App', () => {
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
     await antenatalWardPage.manageAdmissionRequests().click();
-    await antenatalWardPage.admitPatientButton(patientName).click();
+    await antenatalWardPage.transferPatientButton(patientName).click();
 
     await antenatalWardPage.selectBed(bedNumber);
     await antenatalWardPage.clickAdmitButton();
@@ -108,7 +107,7 @@ test.describe('Ward App', () => {
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
     await antenatalWardPage.manageAdmissionRequests().click();
-    await antenatalWardPage.admitPatientButton(patientName).click();
+    await antenatalWardPage.transferPatientButton(patientName).click();
 
     const bedNumber = '1';
     await antenatalWardPage.selectBed(bedNumber);

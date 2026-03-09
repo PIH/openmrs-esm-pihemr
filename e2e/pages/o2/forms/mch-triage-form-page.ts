@@ -13,9 +13,10 @@ export class MCHTriageFormPage {
   constructor(readonly o2VisitPage: O2VisitPage) {}
 
   @step
-  async fillForm({ provider = 'Account, Testing', disposition }: FormFields) {
+  async fillForm({ provider, disposition }: FormFields) {
+    const providerName = provider ?? process.env.E2E_DEFAULT_PROVIDER_NAME;
     await test.step(`Fill the MCH Triage form with provider ${provider} and disposition ${disposition}`, async () => {
-      await this.o2VisitPage.page.locator('select[name="w1"]').selectOption(provider);
+      await this.o2VisitPage.page.locator('select[name="w1"]').selectOption(providerName);
       if (disposition === 'discharge') {
         await this.o2VisitPage.page.locator('select[name="w124"]').selectOption('Discharge');
         return this;
