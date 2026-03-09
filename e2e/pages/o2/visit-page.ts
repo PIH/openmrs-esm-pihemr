@@ -1,5 +1,5 @@
 import { type Page } from '@playwright/test';
-import { test } from '../../core';
+import { step, test } from '../../core';
 import { type Patient, type Visit } from '@openmrs/esm-framework';
 import { MaternalAdmissionFormPage } from './forms/maternal-admission-form-page';
 import { MCHTriageFormPage } from './forms/mch-triage-form-page';
@@ -9,6 +9,7 @@ export class O2VisitPage {
 
   readonly formsTable = () => this.page.getByRole('table', { name: /forms/i });
 
+  @step
   static async open(page: Page, patient: Patient, visit: Visit) {
     return test.step(`Open the visit page for patient ${patient.uuid} and visit ${visit.uuid}`, async () => {
       const visitPage = new O2VisitPage(page);
@@ -19,10 +20,12 @@ export class O2VisitPage {
     });
   }
 
+  @step
   private async openForm(formName: string) {
     await this.page.locator('#visit-app').getByText(formName).click();
   }
 
+  @step
   async openMaternalAdmissionForm() {
     await test.step(`Open the Maternal Admission form`, async () => {
       await this.openForm('Maternal Admission');
@@ -30,6 +33,7 @@ export class O2VisitPage {
     return new MaternalAdmissionFormPage(this);
   }
 
+  @step
   async openMCHTriageForm() {
     await test.step(`Open the MCH Triage form`, async () => {
       await this.openForm('Triage');

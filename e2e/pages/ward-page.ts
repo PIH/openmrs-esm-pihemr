@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { test } from '../core';
+import { step, test } from '../core';
 import { type Patient } from '@openmrs/esm-framework';
 import { getPatientIdentifierStr, getPatientName } from '../commands';
 
@@ -15,31 +15,68 @@ export class WardPage {
   readonly clinicalNotesField = () => this.page.getByRole('textbox', { name: /clinical notes/i });
   readonly wardAdmissionNoteField = () => this.page.getByRole('textbox', { name: /write your notes/i });
   readonly cancelAdmissionRequestHeading = () => this.page.getByText('Cancel admission request');
-  readonly transferButton = () => this.page.getByRole('button', { name: 'Transfers' });
+  readonly transfersButton = () => this.page.getByRole('button', { name: 'Transfers' });
   readonly swapButton = () => this.page.getByRole('tab', { name: 'Bed swap' });
+  readonly addPatientToWardButton = () => this.page.getByRole('button', { name: 'Add patient to ward' });
+  readonly patientSearchBar = () => this.page.getByTestId('patientSearchBar');
 
+  patientCard(patientName: string) {
+    return this.page.locator(`[class*="wardPatientCard"]:has-text("${patientName}")`).first();
+  }
+
+  patientSearchResult(patientName: string) {
+    return this.page.getByRole('button', { name: patientName });
+  }
+
+  manageAdmissionRequests() {
+    return this.manageAdmissionRequestsButton();
+  }
+
+  patientNotesButton() {
+    return this.page.getByRole('button', { name: 'Patient Note' });
+  }
+
+  cancelAdmissionButton(patientName: string) {
+    return this.page
+      .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
+      .filter({ hasText: 'Cancel' })
+      .first();
+  }
+
+  admitElsewhereButton(patientName: string) {
+    return this.page
+      .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
+      .filter({ hasText: 'Admit elsewhere' })
+      .first();
+  }
+
+  transferElsewhereButton(patientName: string) {
+    return this.page
+      .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
+      .filter({ hasText: 'Transfer elsewhere' })
+      .first();
+  }
+
+  admitPatientButton(patientName: string) {
+    return this.page
+      .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
+      .filter({ hasText: 'Admit patient' })
+      .first();
+  }
+
+  transferPatientButton(patientName: string) {
+    return this.page
+      .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
+      .filter({ hasText: 'Transfer patient' })
+      .first();
+  }
+
+  @step
   static async open(page: Page) {
     return test.step('When I navigate to the ward page', async () => {
       const wardPage = new WardPage(page);
       wardPage.page.goto('/openmrs/spa/home/ward');
       return wardPage;
-    });
-  }
-
-  async clickPatientCard(patientName: string) {
-    // Wait for patient to be loaded - use first() to avoid strict mode violation
-    await this.page
-      .locator(`[class*="wardPatientCard"]:has-text("${patientName}")`)
-      .first()
-      .waitFor({ state: 'visible' });
-
-    // Click the patient card directly
-    await this.page.locator(`[class*="wardPatientCard"]:has-text("${patientName}")`).first().click({ force: true });
-  }
-
-  async clickManageAdmissionRequests() {
-    await test.step('When I click the "Manage" button to view admission requests', async () => {
-      await this.manageAdmissionRequestsButton().click();
     });
   }
 
@@ -53,50 +90,8 @@ export class WardPage {
       .waitFor({ state: 'visible', timeout: 5000 });
   }
 
-  async clickPatientNotesButton() {
-    await this.page.getByRole('button', { name: 'Patient Note' }).click();
-  }
-
-  async clickCancelAdmissionButton(patientName: string) {
-    return test.step(`When I click the "Cancel" button for patient ${patientName}`, async () => {
-      return this.page
-        .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
-        .filter({ hasText: 'Cancel' })
-        .first()
-        .click();
-    });
-  }
-
-  async clickAdmitElsewhereButton(patientName: string) {
-    return test.step(`When I click the "Admit elsewhere" button for patient ${patientName}`, async () => {
-      return this.page
-        .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
-        .filter({ hasText: 'Admit elsewhere' })
-        .first()
-        .click();
-    });
-  }
-
-  async clickTransferElsewhereButton(patientName: string) {
-    return test.step(`When I click the "Transfer elsewhere" button for patient ${patientName}`, async () => {
-      return this.page
-        .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
-        .filter({ hasText: 'Transfer elsewhere' })
-        .first()
-        .click();
-    });
-  }
-
   async fillWardAdmissionNote(note: string) {
     await this.wardAdmissionNoteField().fill(note);
-  }
-
-  async clickSaveButton() {
-    await this.saveButton().click();
-  }
-
-  async expectAdmissionRequestCancelled() {
-    await this.page.getByText(/admission request cancelled/i).waitFor({ state: 'visible' });
   }
 
   async waitForPatientInWardView(patientName: string) {
@@ -106,38 +101,33 @@ export class WardPage {
       .waitFor({ state: 'visible' });
   }
 
-  async clickAdmitPatientButton(patientName: string) {
-    return test.step(`When I click the "Admit patient" button for patient ${patientName}`, async () => {
-      return this.page
-        .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
-        .filter({ hasText: 'Admit patient' })
-        .first()
-        .click();
-    });
-  }
-
-  async clickTransferPatientButton(patientName: string) {
-    return test.step(`When I click the "Transfer patient" button for patient ${patientName}`, async () => {
-      return this.page
-        .locator(`[class*="admissionRequestCard"]:has-text("${patientName}") button`)
-        .filter({ hasText: 'Transfer patient' })
-        .first()
-        .click();
-    });
-  }
-
+  @step
   async selectBed(bedNumber: string) {
     return test.step(`When I select bed ${bedNumber} for the patient admission`, async () => {
       await this.page.getByText(new RegExp(`^${bedNumber} · `)).click();
     });
   }
 
+  @step
+  async selectLocation(locationName: string) {
+    await this.page.locator('#omrs-workspaces-container').getByText(locationName).click();
+  }
+
+  @step
+  async clickSaveButton() {
+    return test.step('When I click the "Save" button', async () => {
+      await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+    });
+  }
+
+  @step
   async clickAdmitButton() {
     return test.step('When I click the "Admit" button to confirm patient admission', async () => {
       await this.page.getByRole('button', { name: 'Admit', exact: true }).click();
     });
   }
 
+  @step
   async expectAdmissionSuccessNotification(patientName: string, bedNumber: string) {
     return test.step(`Then I should see a success message confirming ${patientName} was admitted to bed ${bedNumber}`, async () => {
       await expect(this.page.getByText('Patient admitted successfully')).toBeVisible();
@@ -149,9 +139,24 @@ export class WardPage {
     });
   }
 
+  @step
   async expectPatientAdmittedToWard(patient: Patient) {
     return test.step(`Then I should see the patient ${getPatientName(patient)} admitted to the ward`, async () => {
       await expect(this.page.getByText(getPatientIdentifierStr(patient))).toBeVisible();
+    });
+  }
+
+  @step
+  async expectTransferRequestSubmitted() {
+    return await test.step('Then I should see the transfer request submitted successfully', async () => {
+      await expect(this.page.getByText('Patient transfer request created')).toBeVisible();
+    });
+  }
+
+  @step
+  async expectAdmissionRequestCancelled() {
+    return await test.step('Then I should see success toast for cancelled admission request', async () => {
+      await expect(this.page.getByText('admission request cancelled')).toBeVisible();
     });
   }
 }

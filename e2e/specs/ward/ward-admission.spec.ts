@@ -21,42 +21,35 @@ test.describe('Ward App', () => {
     const mchTriageFormPage = await o2VisitPage.openMCHTriageForm();
     await mchTriageFormPage.fillForm({ disposition: { admitToWard: 'Labour and Delivery' } });
     await mchTriageFormPage.save();
-
-    await test.step('Then I should see success toast', async () => {
-      await expect(page.getByText('Entered MCOE Triage for ' + adultWoman.person.display)).toBeVisible();
-    });
+    await mchTriageFormPage.expectSuccessToast(patientName);
 
     await changeLocation(api, KGHLocationsUuids['Labour and Delivery']);
     const wardPage = await WardPage.open(page);
-    await wardPage.clickManageAdmissionRequests();
+    await wardPage.manageAdmissionRequests().click();
 
-    await wardPage.clickAdmitPatientButton(patientName);
+    await wardPage.admitPatientButton(patientName).click();
 
-    await test.step('When I select bed 1 and click the "Admit" button', async () => {
-      await page.getByText(/^1 · /).click();
-      await page.getByRole('button', { name: 'Admit', exact: true }).click();
-    });
+    const bedNumber = '1';
+    await wardPage.selectBed(bedNumber);
+    await wardPage.clickAdmitButton();
 
-    await wardPage.expectAdmissionSuccessNotification(patientName, '1');
+    await wardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
     await wardPage.expectPatientAdmittedToWard(adultWoman);
 
-    await wardPage.clickPatientCard(patientName);
-    await page.getByRole('button', { name: 'Transfers' }).click();
-    await page.locator('#omrs-workspaces-container').getByText('Antenatal Ward').click();
-    await page.getByRole('button', { name: 'Save' }).click();
-
-    await test.step('Then I should see the transfer request submitted successfully', async () => {
-      await expect(page.getByText('Patient transfer request created')).toBeVisible();
-    });
+    await wardPage.patientCard(patientName).click();
+    await wardPage.transfersButton().click();
+    await wardPage.selectLocation('Antenatal Ward');
+    await wardPage.clickSaveButton();
+    await wardPage.expectTransferRequestSubmitted();
 
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
-    await antenatalWardPage.clickManageAdmissionRequests();
-    await antenatalWardPage.clickAdmitPatientButton(patientName);
+    await antenatalWardPage.manageAdmissionRequests().click();
+    await antenatalWardPage.admitPatientButton(patientName).click();
 
-    await antenatalWardPage.selectBed('1');
+    await antenatalWardPage.selectBed(bedNumber);
     await antenatalWardPage.clickAdmitButton();
-    await antenatalWardPage.expectAdmissionSuccessNotification(patientName, '1');
+    await antenatalWardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
 
     await wardPage.expectPatientAdmittedToWard(adultWoman);
   });
@@ -73,25 +66,18 @@ test.describe('Ward App', () => {
     const mchTriageFormPage = await o2VisitPage.openMCHTriageForm();
     await mchTriageFormPage.fillForm({ disposition: { admitToWard: 'Labour and Delivery' } });
     await mchTriageFormPage.save();
-
-    await test.step('Then I should see success toast', async () => {
-      await expect(page.getByText('Entered MCOE Triage for ' + adultWoman.person.display)).toBeVisible();
-    });
+    await mchTriageFormPage.expectSuccessToast(patientName);
 
     await changeLocation(api, KGHLocationsUuids['Labour and Delivery']);
     const wardPage = await WardPage.open(page);
-    await wardPage.clickManageAdmissionRequests();
+    await wardPage.manageAdmissionRequests().click();
 
-    await wardPage.clickCancelAdmissionButton(patientName);
+    await wardPage.cancelAdmissionButton(patientName).click();
 
-    await test.step('When I fill the admission cancellation note and click the "Save" button', async () => {
-      await wardPage.clinicalNotesField().fill('Patient does not require admission at this time');
-      await wardPage.clickSaveButton();
-    });
+    await wardPage.clinicalNotesField().fill('Patient does not require admission at this time');
+    await wardPage.clickSaveButton();
 
-    await test.step('Then I should see success toast for cancelled admission request', async () => {
-      await expect(page.getByText('admission request cancelled')).toBeVisible();
-    });
+    await wardPage.expectAdmissionRequestCancelled();
   });
 
   test('Have a patient admit elsewhere from the ward admission requests list', async ({
@@ -107,32 +93,27 @@ test.describe('Ward App', () => {
     const mchTriageFormPage = await o2VisitPage.openMCHTriageForm();
     await mchTriageFormPage.fillForm({ disposition: { admitToWard: 'Labour and Delivery' } });
     await mchTriageFormPage.save();
-
-    await test.step('Then I should see success toast', async () => {
-      await expect(page.getByText('Entered MCOE Triage for ' + adultWoman.person.display)).toBeVisible();
-    });
+    await mchTriageFormPage.expectSuccessToast(patientName);
 
     await changeLocation(api, KGHLocationsUuids['Labour and Delivery']);
     const labourAndDeliveryWardPage = await WardPage.open(page);
-    await labourAndDeliveryWardPage.clickManageAdmissionRequests();
+    await labourAndDeliveryWardPage.manageAdmissionRequests().click();
 
-    await labourAndDeliveryWardPage.clickAdmitElsewhereButton(patientName);
+    await labourAndDeliveryWardPage.admitElsewhereButton(patientName).click();
 
-    await page.locator('#omrs-workspaces-container').getByText('Antenatal Ward').click();
-    await page.getByRole('button', { name: 'Save' }).click();
-
-    await test.step('Then I should see the admission request submitted successfully', async () => {
-      await expect(page.getByText('Patient admission request created')).toBeVisible();
-    });
+    await labourAndDeliveryWardPage.selectLocation('Antenatal Ward');
+    await labourAndDeliveryWardPage.clickSaveButton();
+    await labourAndDeliveryWardPage.expectTransferRequestSubmitted();
 
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
-    await antenatalWardPage.clickManageAdmissionRequests();
-    await antenatalWardPage.clickAdmitPatientButton(patientName);
+    await antenatalWardPage.manageAdmissionRequests().click();
+    await antenatalWardPage.admitPatientButton(patientName).click();
 
-    await antenatalWardPage.selectBed('1');
+    const bedNumber = '1';
+    await antenatalWardPage.selectBed(bedNumber);
     await antenatalWardPage.clickAdmitButton();
-    await antenatalWardPage.expectAdmissionSuccessNotification(patientName, '1');
+    await antenatalWardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
 
     await antenatalWardPage.expectPatientAdmittedToWard(adultWoman);
   });
@@ -143,17 +124,19 @@ test.describe('Ward App', () => {
 
     await changeLocation(api, KGHLocationsUuids['Labour and Delivery']);
     const wardPage = await WardPage.open(page);
-    await wardPage.clickManageAdmissionRequests();
+    await wardPage.manageAdmissionRequests().click();
 
-    await page.getByRole('button', { name: 'Add patient to ward' }).click();
-    await page.getByTestId('patientSearchBar').click();
-    await page.getByTestId('patientSearchBar').fill(patientIdentifier);
-    await page.getByRole('button', { name: patientName }).click();
+    await wardPage.addPatientToWardButton().click();
+    await wardPage.patientSearchBar().click();
+    await wardPage.patientSearchBar().fill(patientIdentifier);
+    await wardPage.patientSearchResult(patientName).click();
+    // TODO: update this after the html id is checked in for the ward app
     await page.locator('#create-admission-encounter-workspace').getByRole('button', { name: 'admit patient' }).click();
 
-    await wardPage.selectBed('1');
+    const bedNumber = '1';
+    await wardPage.selectBed(bedNumber);
     await wardPage.clickAdmitButton();
-    await wardPage.expectAdmissionSuccessNotification(patientName, '1');
+    await wardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
 
     await wardPage.expectPatientAdmittedToWard(adultWoman);
   });
