@@ -4,8 +4,18 @@ import { step, test } from '../../../core';
 
 type LocationName = string;
 
+type ReferralFrom =
+  | 'Peripheral Health Unit'
+  | 'CHW (Community Health Worker)'
+  | 'Traditional birth attendant (TBA)'
+  | 'Self-refer'
+  | 'Other';
+type TransportMethod = 'Ambulance' | 'Motorbike' | 'Walking' | 'Car' | 'Other';
+
 type FormFields = {
   provider?: string;
+  referralFrom?: ReferralFrom;
+  transportMethod?: TransportMethod;
   disposition: { admitToWard: LocationName } | 'discharge';
 };
 
@@ -13,16 +23,20 @@ export class MCHTriageFormPage {
   constructor(readonly o2VisitPage: O2VisitPage) {}
 
   @step
-  async fillForm({ provider, disposition }: FormFields) {
+  async fillForm({ provider, referralFrom = 'Other', transportMethod = 'Other', disposition }: FormFields) {
     const providerName = provider ?? process.env.E2E_DEFAULT_PROVIDER_NAME;
     await test.step(`Fill the MCH Triage form with provider ${provider} and disposition ${disposition}`, async () => {
-      await this.o2VisitPage.page.locator('select[name="w1"]').selectOption(providerName);
+      await this.o2VisitPage.page.locator('#who select').selectOption(providerName);
+      await this.o2VisitPage.page.locator('#role-refer').getByLabel(referralFrom).check();
+      await this.o2VisitPage.page.locator('#transport').getByLabel(transportMethod).check();
       if (disposition === 'discharge') {
-        await this.o2VisitPage.page.locator('select[name="w124"]').selectOption('Discharge');
+        await this.o2VisitPage.page.locator('#encounter-disposition select').selectOption('Discharge');
         return this;
       } else {
-        await this.o2VisitPage.page.locator('select[name="w124"]').selectOption('Admission');
-        await this.o2VisitPage.page.locator('select[name="w126"]').selectOption(disposition.admitToWard);
+        await this.o2VisitPage.page.locator('#encounter-disposition select').selectOption('Admission');
+        await this.o2VisitPage.page
+          .locator('#disposition-emrapi-admittohospital-admissionlocation select')
+          .selectOption(disposition.admitToWard);
       }
     });
   }

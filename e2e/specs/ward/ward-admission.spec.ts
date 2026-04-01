@@ -39,7 +39,7 @@ test.describe('Ward App', () => {
     await wardPage.transfersButton().click();
     await wardPage.selectLocation('Antenatal Ward');
     await wardPage.clickSaveButton();
-    await wardPage.expectTransferRequestSubmitted();
+    await wardPage.expectTransferRequestSubmitted(patientName);
 
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
@@ -102,7 +102,7 @@ test.describe('Ward App', () => {
 
     await labourAndDeliveryWardPage.selectLocation('Antenatal Ward');
     await labourAndDeliveryWardPage.clickSaveButton();
-    await labourAndDeliveryWardPage.expectTransferRequestSubmitted();
+    await labourAndDeliveryWardPage.expectTransferRequestSubmitted(patientName);
 
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
@@ -129,8 +129,7 @@ test.describe('Ward App', () => {
     await wardPage.patientSearchBar().click();
     await wardPage.patientSearchBar().fill(patientIdentifier);
     await wardPage.patientSearchResult(patientName).click();
-    // TODO: update this after the html id is checked in for the ward app
-    await page.locator('#create-admission-encounter-workspace').getByRole('button', { name: 'admit patient' }).click();
+    await wardPage.admitPatientFromWorkspace().click();
 
     const bedNumber = '1';
     await wardPage.selectBed(bedNumber);
@@ -138,5 +137,116 @@ test.describe('Ward App', () => {
     await wardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
 
     await wardPage.expectPatientAdmittedToWard(adultWoman);
+  });
+
+  test('Have mother and newborn transfer together', async ({
+    page,
+    api,
+    adultWoman,
+    adultWomanVisit,
+    newborn,
+    newbornVisit,
+  }) => {
+    const motherName = getPatientName(adultWoman);
+    const motherPatientIdentifier = getPatientIdentifierStr(adultWoman);
+    const newbornName = getPatientName(newborn);
+    const newbornPatientIdentifier = getPatientIdentifierStr(newborn);
+
+    await changeLocation(api, KGHLocationsUuids['Labour and Delivery']);
+    const wardPage = await WardPage.open(page);
+    await wardPage.manageAdmissionRequests().click();
+
+    await wardPage.addPatientToWardButton().click();
+    await wardPage.patientSearchBar().click();
+    await wardPage.patientSearchBar().fill(motherPatientIdentifier);
+    await wardPage.patientSearchResult(motherName).click();
+    await wardPage.admitPatientFromWorkspace().click();
+
+    const bedNumber = '1';
+    await wardPage.selectBed(bedNumber);
+    await wardPage.clickAdmitButton();
+    await wardPage.expectAdmissionSuccessNotification(motherName, bedNumber);
+
+    await wardPage.manageAdmissionRequests().click();
+
+    await wardPage.addPatientToWardButton().click();
+    await wardPage.patientSearchBar().click();
+    await wardPage.patientSearchBar().fill(newbornPatientIdentifier);
+    await wardPage.patientSearchResult(newbornName).click();
+    await wardPage.admitPatientFromWorkspace().click();
+
+    await wardPage.selectBed(bedNumber);
+    await test.step('wait for previous notifications to dismiss themselves', async () => {
+      await page.waitForTimeout(5000);
+    });
+    await wardPage.clickAdmitButton();
+    await wardPage.expectAdmissionSuccessNotification(newbornName, bedNumber);
+    await wardPage.expectMotherChildBedShareTagInBed(bedNumber);
+  });
+
+  test('Bed Swapping a patient', async ({ page, api, adultWoman, adultWomanVisit, newborn, newbornVisit }) => {
+    const patientName = getPatientName(adultWoman);
+
+    const o2VisitPage: O2VisitPage = await O2VisitPage.open(page, adultWoman, adultWomanVisit);
+    const mchTriageFormPage = await o2VisitPage.openMCHTriageForm();
+    await mchTriageFormPage.fillForm({ disposition: { admitToWard: 'Labour and Delivery' } });
+    await mchTriageFormPage.save();
+    await mchTriageFormPage.expectSuccessToast(patientName);
+
+    await changeLocation(api, KGHLocationsUuids['Labour and Delivery']);
+    const wardPage = await WardPage.open(page);
+    await wardPage.manageAdmissionRequests().click();
+
+    await wardPage.admitPatientButton(patientName).click();
+
+    const bedNumber = '1';
+    await test.step('admit and assign to bed 1', async () => {
+      await wardPage.selectBed(bedNumber);
+      await wardPage.clickAdmitButton();
+      await wardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
+      await wardPage.expectPatientAdmittedToWard(adultWoman);
+    });
+
+    await wardPage.patientCard(patientName).click();
+    await wardPage.transfersButton().click();
+    await wardPage.swapButton().click();
+
+    const newBedNumber = '2';
+    await test.step('from one assigned bed to another assigned bed', async () => {
+      await wardPage.selectBed(newBedNumber);
+      await wardPage.clickSaveButton();
+      await wardPage.expectBedSwapSuccess(patientName, newBedNumber);
+    });
+
+    await test.step('from assigned bed to no bed', async () => {
+      await wardPage.patientCard(patientName).click();
+      await wardPage.transfersButton().click();
+      await wardPage.swapButton().click();
+      await wardPage.selectNoBed();
+      await wardPage.clickSaveButton();
+      await wardPage.expectUnassignBedSuccess(patientName);
+    });
+
+    await test.step('from no bed to assigned bed', async () => {
+      await wardPage.patientCard(patientName).click();
+      await wardPage.transfersButton().click();
+      await wardPage.swapButton().click();
+      await wardPage.selectBed(bedNumber);
+      await test.step('wait for previous notifications to dismiss themselves', async () => {
+        await page.waitForTimeout(5000);
+      });
+      await wardPage.clickSaveButton();
+      await wardPage.expectBedSwapSuccess(patientName, bedNumber);
+    });
+
+    const newbornName = getPatientName(newborn);
+    const newbornPatientIdentifier = getPatientIdentifierStr(newborn);
+    await test.step('admit another patient to bed 1', async () => {
+      await wardPage.manageAdmissionRequests().click();
+      await wardPage.addPatientToWardButton().click();
+      await wardPage.patientSearchBar().click();
+      await wardPage.patientSearchBar().fill(newbornPatientIdentifier);
+      await wardPage.patientSearchResult(newbornName).click();
+    });
   });
 });

@@ -1,7 +1,8 @@
 import { type APIRequestContext, type Page, test as base } from '@playwright/test';
 import { api } from '../fixtures';
-import { generateRandomPatient, deletePatient, startVisit, endVisit } from '../commands';
+import { generateRandomPatient, deletePatient, startVisit, endVisit, addMotherChildRelationship } from '../commands';
 import { type Patient, type Visit } from '@openmrs/esm-framework';
+import { KGHLocationsUuids } from './constants';
 
 /**
  * Mostly taken from openmrs-esm-patient-management
@@ -16,6 +17,10 @@ import { type Patient, type Visit } from '@openmrs/esm-framework';
 export interface CustomTestFixtures {
   adultWoman: Patient;
   adultWomanVisit: Visit;
+  newborn: Patient;
+  newbornVisit: Visit;
+  newborn2: Patient;
+  newborn2Visit: Visit;
 }
 
 export interface CustomWorkerFixtures {
@@ -30,15 +35,49 @@ export const test = base.extend<CustomTestFixtures, CustomWorkerFixtures>({
       await use(patient);
       await deletePatient(api, patient.uuid);
     },
-    { scope: 'test', auto: true },
+    { scope: 'test' },
   ],
   adultWomanVisit: [
     async ({ api, adultWoman }, use) => {
-      const visit = await startVisit(api, adultWoman.uuid, '074b2ab0-716a-11eb-8aa6-0242ac110002'); // kgh
+      const visit = await startVisit(api, adultWoman.uuid, KGHLocationsUuids.KGH);
       await use(visit);
       await endVisit(api, visit.uuid);
     },
-    { scope: 'test', auto: true },
+    { scope: 'test' },
+  ],
+  newborn: [
+    async ({ api, adultWoman }, use) => {
+      const newborn = await generateRandomPatient(api, 'newborn', KGHLocationsUuids.KGH);
+      await addMotherChildRelationship(api, adultWoman.uuid, newborn.uuid);
+      await use(newborn);
+      await deletePatient(api, newborn.uuid);
+    },
+    { scope: 'test' },
+  ],
+  newbornVisit: [
+    async ({ api, newborn }, use) => {
+      const visit = await startVisit(api, newborn.uuid, KGHLocationsUuids.KGH);
+      await use(visit);
+      await endVisit(api, visit.uuid);
+    },
+    { scope: 'test' },
+  ],
+  newborn2: [
+    async ({ api, adultWoman }, use) => {
+      const newborn = await generateRandomPatient(api, 'newborn', KGHLocationsUuids.KGH);
+      await addMotherChildRelationship(api, adultWoman.uuid, newborn.uuid);
+      await use(newborn);
+      await deletePatient(api, newborn.uuid);
+    },
+    { scope: 'test' },
+  ],
+  newborn2Visit: [
+    async ({ api, newborn2 }, use) => {
+      const visit = await startVisit(api, newborn2.uuid, KGHLocationsUuids.KGH);
+      await use(visit);
+      await endVisit(api, visit.uuid);
+    },
+    { scope: 'test' },
   ],
 });
 
