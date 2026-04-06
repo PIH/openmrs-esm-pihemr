@@ -1,6 +1,6 @@
 import { type Patient } from '@openmrs/esm-framework';
 import { type APIRequestContext, expect } from '@playwright/test';
-import { KGHEmrIdSourceUuid, KGHEmrIdTypeUuid } from '../core/constants';
+import { KGHEmrIdSourceUuid, KGHEmrIdTypeUuid, motherChildRelationshipTypeUuid } from '../core/constants';
 
 /**
  * Mostly taken from openmrs-esm-patient-management
@@ -122,6 +122,17 @@ export const generateRandomPatient = async (
   });
   await expect(patientRes.ok()).toBeTruthy();
   return await patientRes.json();
+};
+
+export const addMotherChildRelationship = async (api: APIRequestContext, motherUuid: string, childUuid: string) => {
+  const relationshipRes = await api.post('relationship', {
+    data: {
+      personA: motherUuid,
+      personB: childUuid,
+      relationshipType: motherChildRelationshipTypeUuid,
+    },
+  });
+  await expect(relationshipRes.ok()).toBeTruthy();
 };
 
 export const getPatient = async (api: APIRequestContext, uuid: string): Promise<Patient> => {

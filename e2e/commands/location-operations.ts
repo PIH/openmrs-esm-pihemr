@@ -10,5 +10,9 @@ export const changeLocation = async (api: APIRequestContext, locationUuid: strin
       sessionLocation: locationUuid,
     },
   });
+  if (!locationRes.ok()) {
+    const errorBody = await locationRes.text();
+    throw new Error(`Failed to change location. Status: ${locationRes.status()}, Body: ${errorBody}`);
+  }
   await expect(locationRes.ok()).toBeTruthy();
 };

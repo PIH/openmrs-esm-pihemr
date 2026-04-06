@@ -9,7 +9,7 @@ export class MaternalAdmissionFormPage {
   constructor(readonly o2VisitPage: O2VisitPage) {}
 
   async fillForm({ admittedTo }: FormFields) {
-    await this.o2VisitPage.page.locator('select[name="w3"]').selectOption(admittedTo);
+    await this.o2VisitPage.page.locator('#where select').selectOption(admittedTo);
   }
 
   async save() {

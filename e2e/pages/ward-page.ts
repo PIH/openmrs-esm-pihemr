@@ -28,6 +28,10 @@ export class WardPage {
     return this.page.getByRole('button', { name: patientName });
   }
 
+  admitPatientFromWorkspace() {
+    return this.page.locator('#create-admission-encounter-workspace').getByRole('button', { name: 'admit patient' });
+  }
+
   manageAdmissionRequests() {
     return this.manageAdmissionRequestsButton();
   }
@@ -112,6 +116,16 @@ export class WardPage {
   }
 
   @step
+  async selectNoBed() {
+    return test.step(`When I select no bed for the patient admission`, async () => {
+      if (await this.page.getByRole('combobox', { name: 'Choose an option' }).isVisible()) {
+        await this.page.getByRole('combobox', { name: 'Choose an option' }).click();
+      }
+      await this.page.getByText('No bed').click();
+    });
+  }
+
+  @step
   async selectLocation(locationName: string) {
     await this.page.locator('#omrs-workspaces-container').getByText(locationName).click();
   }
@@ -143,6 +157,15 @@ export class WardPage {
   }
 
   @step
+  async expectMotherChildBedShareTagInBed(bedNumber: string) {
+    return test.step(`Then I should see the mother-child bed share tag in bed ${bedNumber}`, async () => {
+      const bedLocator = this.page.locator(`#bed-${bedNumber}`);
+      await expect(bedLocator).toBeVisible();
+      await expect(bedLocator.getByText('Mother / Child')).toBeVisible();
+    });
+  }
+
+  @step
   async expectPatientAdmittedToWard(patient: Patient) {
     return test.step(`Then I should see the patient ${getPatientName(patient)} admitted to the ward`, async () => {
       await expect(this.page.getByText(getPatientIdentifierStr(patient))).toBeVisible();
@@ -150,9 +173,27 @@ export class WardPage {
   }
 
   @step
-  async expectTransferRequestSubmitted() {
+  async expectTransferRequestSubmitted(patientName) {
     return await test.step('Then I should see the transfer request submitted successfully', async () => {
-      await expect(this.page.getByText('Patient transfer request created')).toBeVisible();
+      await expect(this.page.getByText('Transfer request created for ' + patientName)).toBeVisible();
+    });
+  }
+
+  @step
+  async expectBedSwapSuccess(patientName: string, bedNumber: string) {
+    return test.step(`Then I should see a success message confirming ${patientName} was assigned to bed ${bedNumber}`, async () => {
+      await expect(this.page.getByText('Patient assigned to new bed')).toBeVisible();
+      await expect(
+        this.page.getByText(new RegExp(`${patientName}\\s+assigned to bed ${bedNumber}`, 'i')),
+      ).toBeVisible();
+    });
+  }
+
+  @step
+  async expectUnassignBedSuccess(patientName: string) {
+    return test.step(`Then I should see a success message confirming ${patientName} was unassigned from bed`, async () => {
+      await expect(this.page.getByText('Patient unassigned from bed')).toBeVisible();
+      await expect(this.page.getByText(new RegExp(`${patientName} is now unassigned from bed`, 'i'))).toBeVisible();
     });
   }
 
