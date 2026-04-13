@@ -22,8 +22,6 @@ test.describe('Service Queues', () => {
     await serviceQueuesPage.expectPatientInWaitingQueue(patientName);
     await serviceQueuesPage.triagePatient(patientName);
 
-    await page.reload();
-
     await serviceQueuesPage.expectPatientInInServiceQueue(patientName);
 
     await serviceQueuesPage.dismissWorkspace();
