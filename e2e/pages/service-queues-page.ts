@@ -165,6 +165,7 @@ export class ServiceQueuesPage {
     });
   }
 
+  @step
   async expectPatientNotInWaitingQueue(patientName: string) {
     return test.step(`Then I should not see ${patientName} in the waiting queue`, async () => {
       await expect(this.waitingRow(patientName)).not.toBeVisible();
