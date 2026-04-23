@@ -2,8 +2,9 @@ import { ExtensionSlot, Workspace2 } from '@openmrs/esm-framework';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import O2IFrame from './o2-iframe.component';
 import type { WardPatientWorkspaceDefinition } from './types';
+import VitalsTable from './VitalsTable';
+import O2IFrame from './o2-iframe.component';
 
 const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ groupProps: { wardPatient } }) => {
   const { patient, visit } = wardPatient ?? {};
@@ -50,7 +51,10 @@ const O2VitalSignsWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ group
     <Workspace2 title={t('vitalSigns', 'Vital signs')} hasUnsavedChanges={false}>
       <ExtensionSlot name="ward-workspace-patient-banner-slot" state={{ wardPatient }} />
       {iframeSrc ? (
-        <O2IFrame src={iframeSrc} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />
+        <>
+          <VitalsTable patientUuid={patient.uuid} visitUuid={visit.uuid} />
+          <O2IFrame src={iframeSrc} elementsToHide={elementsToHide} customJavaScript={customJavaScript} />
+        </>
       ) : (
         <div>{t('patientHasNoActiveVisit', 'Patient has no active visit')}</div>
       )}
