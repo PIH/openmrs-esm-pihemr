@@ -238,20 +238,20 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
       id: encounter.uuid,
       date: dayjs(encounter.encounterDatetime).format('DD/MM/YYYY HH:mm'),
       bp: {
-        systolic: createVitalCellData(vitalsMap[vitalsConcepts.systolic], vitalsConcepts.systolic),
-        diastolic: createVitalCellData(vitalsMap[vitalsConcepts.diastolic], vitalsConcepts.diastolic),
+        systolic: createVitalCellData(vitalsMap[vitalsConcepts.systolic]),
+        diastolic: createVitalCellData(vitalsMap[vitalsConcepts.diastolic]),
       },
-      pulse: createVitalCellData(vitalsMap[vitalsConcepts.pulse], vitalsConcepts.pulse),
-      temperature: createVitalCellData(vitalsMap[vitalsConcepts.temperature], vitalsConcepts.temperature),
+      pulse: createVitalCellData(vitalsMap[vitalsConcepts.pulse]),
+      temperature: createVitalCellData(vitalsMap[vitalsConcepts.temperature]),
       oxygenSaturation: createVitalCellData(
         vitalsMap[vitalsConcepts.oxygenSaturation],
         vitalsConcepts.oxygenSaturation,
       ),
-      respiratoryRate: createVitalCellData(vitalsMap[vitalsConcepts.respiratoryRate], vitalsConcepts.respiratoryRate),
+      respiratoryRate: createVitalCellData(vitalsMap[vitalsConcepts.respiratoryRate]),
       hemoglobin: createVitalCellData(vitalsMap[vitalsConcepts.hemoglobin]),
       glucose: createVitalCellData(vitalsMap[vitalsConcepts.glucose]),
-      fhr: createVitalCellData(vitalsMap[vitalsConcepts.fhr], vitalsConcepts.fhr),
-      secondFhr: createVitalCellData(vitalsMap[vitalsConcepts.secondFhr], vitalsConcepts.secondFhr),
+      fhr: createVitalCellData(vitalsMap[vitalsConcepts.fhr]),
+      secondFhr: createVitalCellData(vitalsMap[vitalsConcepts.secondFhr]),
       provider: providerName,
     };
   };
