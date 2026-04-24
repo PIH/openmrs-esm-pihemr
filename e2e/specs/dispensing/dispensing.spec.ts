@@ -40,10 +40,10 @@ test.describe('Dispensing', () => {
 
     await dispensingPage.selectLocationForActivePrescriptionTableFilter('Labour and Delivery');
     await dispensingPage.searchPrescriptions(patientIdentifier);
-    await dispensingPage.expectActivePrescriptionForPatient(patientName, 'Calcium Vitamin D3');
+    await dispensingPage.expectPrescriptionRowForPatient(patientName, 'Calcium Vitamin D3', 'Active');
   });
 
-  test('Create a paper prescription , elect to dispenseand, and verify it appears as an active prescription', async ({
+  test('Create a paper prescription , elect to dispense and, and verify it appears as an completed prescription', async ({
     page,
     adultWoman,
     adultWomanVisit,
@@ -83,6 +83,6 @@ test.describe('Dispensing', () => {
     await dispensingPage.selectLocationForActivePrescriptionTableFilter('Labour and Delivery');
     await dispensingPage.searchPrescriptions(patientIdentifier);
 
-    await dispensingPage.expectActivePrescriptionForPatient(patientName, 'Calcium Vitamin D3');
+    await dispensingPage.expectPrescriptionRowForPatient(patientName, 'Calcium Vitamin D3', 'Completed');
   });
 });

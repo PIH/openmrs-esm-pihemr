@@ -81,7 +81,7 @@ export class DispensingPage {
   @step
   async selectLocationForActivePrescriptionTableFilter(locationName: string) {
     return test.step(`When I change the location selection filter to include "${locationName}"`, async () => {
-      await this.page.getByRole('combobox').click();
+      await this.page.getByRole('combobox').filter({ hasText: 'Filter by locations' }).click();
       await this.page.getByRole('option', { name: locationName }).click();
     });
   }
@@ -89,11 +89,15 @@ export class DispensingPage {
   // ── Assertions ────────────────────────────────────────────────────────────
 
   @step
-  async expectActivePrescriptionForPatient(patientName: string, drugName: string) {
-    return test.step(`Then I should see an active prescription for ${patientName} containing ${drugName}`, async () => {
+  async expectPrescriptionRowForPatient(
+    patientName: string,
+    drugName: string,
+    status: 'Active' | 'Completed' | 'Cancelled' | 'Expired',
+  ) {
+    return test.step(`Then I should see a prescription row for ${patientName} containing ${drugName} with status ${status}`, async () => {
       const row = this.prescriptionRow(patientName);
       await expect(row).toBeVisible();
-      await expect(row.getByRole('cell', { name: 'Active' })).toBeVisible();
+      await expect(row.getByRole('cell', { name: status })).toBeVisible();
       await expect(row.getByRole('cell', { name: new RegExp(drugName) })).toBeVisible();
     });
   }
