@@ -5,7 +5,8 @@
  * microfrontend.
  */
 
-import { getAsyncLifecycle } from '@openmrs/esm-framework';
+import { getAsyncLifecycle, defineConfigSchema } from '@openmrs/esm-framework';
+import { configSchema } from './config-schema';
 
 const moduleName = '@pih/esm-commons-app';
 
@@ -46,4 +47,6 @@ export const triageWaitingQueueActions = getAsyncLifecycle(
   { featureName: 'triageWaitingQueueActions', moduleName },
 );
 
-export function startupApp() {}
+export function startupApp() {
+  defineConfigSchema(moduleName, configSchema);
+}
