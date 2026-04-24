@@ -64,7 +64,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     externalModuleName: '@openmrs/esm-patient-vitals-app',
   });
   const { concepts: localConcepts } = useConfig<{
-    concepts: { hemoglobinUuid: string; glucoseUuid: string; fhrUuid: string };
+    concepts: { hemoglobinUuid: string; glucoseUuid: string; fhrUuid: string; secondFhrUuid: string };
   }>();
   const vitalsConcepts = {
     systolic: externalConcepts.systolicBloodPressureUuid,
@@ -76,6 +76,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     hemoglobin: localConcepts.hemoglobinUuid,
     glucose: localConcepts.glucoseUuid,
     fhr: localConcepts.fhrUuid,
+    secondFhr: localConcepts.secondFhrUuid,
   };
   const { referenceRangeMap } = useConceptReferenceRanges(patientUuid, Object.values(vitalsConcepts));
   const { t } = useTranslation();
@@ -108,6 +109,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     hemoglobin?: VitalCellData;
     glucose?: VitalCellData;
     fhr?: VitalCellData;
+    secondFhr?: VitalCellData;
     provider?: string;
   }
 
@@ -139,6 +141,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     { key: 'hemoglobin', label: t('hemoglobin', 'Hb'), conceptUuid: vitalsConcepts.hemoglobin },
     { key: 'glucose', label: t('glucose', 'Glucose'), conceptUuid: vitalsConcepts.glucose },
     { key: 'fhr', label: t('fetalHeartRate', 'FHR'), conceptUuid: vitalsConcepts.fhr },
+    { key: 'secondFhr', label: t('secondFetalHeartRate', '2nd FHR'), conceptUuid: vitalsConcepts.secondFhr },
   ];
 
   const renderVitalCell = (
@@ -229,6 +232,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
       hemoglobin: createVitalCellData(vitalsMap[vitalsConcepts.hemoglobin], vitalsConcepts.hemoglobin),
       glucose: createVitalCellData(vitalsMap[vitalsConcepts.glucose], vitalsConcepts.glucose),
       fhr: createVitalCellData(vitalsMap[vitalsConcepts.fhr], vitalsConcepts.fhr),
+      secondFhr: createVitalCellData(vitalsMap[vitalsConcepts.secondFhr], vitalsConcepts.secondFhr),
       provider: providerName,
     };
   };
