@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DataTable,
@@ -9,8 +9,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Button,
 } from '@carbon/react';
-import { openmrsFetch, restBaseUrl, useConfig } from '@openmrs/esm-framework';
+import { openmrsFetch, restBaseUrl, useConfig, usePagination } from '@openmrs/esm-framework';
+import { Pagination } from '@openmrs/esm-styleguide';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
 
@@ -62,19 +64,12 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     fhr: localConcepts.fhrUuid,
   };
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
 
   const { data: vitalsData, error } = useSWR<EncounterResponse>(
     `${restBaseUrl}/encounter?patient=${patientUuid}&visit=${visitUuid}&order=desc&v=${customRepresentation}`,
-    (url) => openmrsFetch(url).then((res) => res.data),
+    (url: string) => openmrsFetch(url).then((res) => res.data),
   );
-
-  if (error) {
-    return <div>{t('errorLoadingVitals', 'Error loading vitals')}</div>;
-  }
-
-  if (!vitalsData) {
-    return <div>{t('loadingVitals', 'Loading vitals...')}</div>;
-  }
 
   const encounters: Encounter[] = vitalsData?.results || [];
 
@@ -84,31 +79,48 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
   });
 
   // Process each encounter to extract vital signs
-  const tableRows = encountersWithVitals.map((encounter) => {
-    const vitalsMap = encounter.obs.reduce(
-      (acc, obs) => {
-        acc[obs.concept.uuid] = obs.value;
-        return acc;
-      },
-      {} as Record<string, number | string | object | null>,
-    );
+  const tableRows = useMemo(
+    () =>
+      encountersWithVitals.map((encounter) => {
+        const vitalsMap = encounter.obs.reduce(
+          (acc, obs) => {
+            acc[obs.concept.uuid] = obs.value;
+            return acc;
+          },
+          {} as Record<string, number | string | object | null>,
+        );
 
-    const systolic = vitalsMap[vitalsConcepts.systolic];
-    const diastolic = vitalsMap[vitalsConcepts.diastolic];
+        const systolic = vitalsMap[vitalsConcepts.systolic];
+        const diastolic = vitalsMap[vitalsConcepts.diastolic];
 
-    return {
-      id: encounter.uuid,
-      date: dayjs(encounter.encounterDatetime).format('DD/MM/YYYY HH:mm'),
-      bp: systolic && diastolic ? `${systolic}/${diastolic}` : '',
-      pulse: vitalsMap[vitalsConcepts.pulse] || '',
-      temperature: vitalsMap[vitalsConcepts.temperature] || '',
-      oxygenSaturation: vitalsMap[vitalsConcepts.oxygenSaturation] || '',
-      respiratoryRate: vitalsMap[vitalsConcepts.respiratoryRate] || '',
-      hemoglobin: vitalsMap[vitalsConcepts.hemoglobin] || '',
-      glucose: vitalsMap[vitalsConcepts.glucose] || '',
-      fhr: vitalsMap[vitalsConcepts.fhr] || '',
-    };
-  });
+        return {
+          id: encounter.uuid,
+          date: dayjs(encounter.encounterDatetime).format('DD/MM/YYYY HH:mm'),
+          bp: systolic && diastolic ? `${systolic}/${diastolic}` : '',
+          pulse: vitalsMap[vitalsConcepts.pulse] || '',
+          temperature: vitalsMap[vitalsConcepts.temperature] || '',
+          oxygenSaturation: vitalsMap[vitalsConcepts.oxygenSaturation] || '',
+          respiratoryRate: vitalsMap[vitalsConcepts.respiratoryRate] || '',
+          hemoglobin: vitalsMap[vitalsConcepts.hemoglobin] || '',
+          glucose: vitalsMap[vitalsConcepts.glucose] || '',
+          fhr: vitalsMap[vitalsConcepts.fhr] || '',
+        };
+      }),
+    [encountersWithVitals, vitalsConcepts],
+  );
+
+  const pageSize = 5;
+  const { results: paginatedVitals, currentPage, goTo } = usePagination(tableRows, pageSize);
+
+  const displayedRows = showAll ? tableRows : paginatedVitals;
+
+  if (error) {
+    return <div>{t('errorLoadingVitals', 'Error loading vitals')}</div>;
+  }
+
+  if (!vitalsData) {
+    return <div>{t('loadingVitals', 'Loading vitals...')}</div>;
+  }
 
   const tableHeaders = [
     { key: 'date', header: t('date', 'Date') },
@@ -123,32 +135,53 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
   ];
 
   return (
-    <DataTable headers={tableHeaders} rows={tableRows} size="sm" useZebraStyles>
-      {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
-        <TableContainer>
-          <Table {...getTableProps()}>
-            <TableHead>
-              <TableRow>
-                {headers.map((header) => (
-                  <TableHeader {...getHeaderProps({ header })} key={header.key}>
-                    {header.header}
-                  </TableHeader>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow {...getRowProps({ row })} key={row.id}>
-                  {row.cells.map((cell) => (
-                    <TableCell key={cell.id}>{cell.value}</TableCell>
+    <>
+      <DataTable headers={tableHeaders} rows={displayedRows} size="sm" useZebraStyles>
+        {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
+          <TableContainer>
+            <Table {...getTableProps()}>
+              <TableHead>
+                <TableRow>
+                  {headers.map((header) => (
+                    <TableHeader {...getHeaderProps({ header })} key={header.key}>
+                      {header.header}
+                    </TableHeader>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </DataTable>
+              </TableHead>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow {...getRowProps({ row })} key={row.id}>
+                    {row.cells.map((cell) => (
+                      <TableCell key={cell.id}>{cell.value}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </DataTable>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
+          <span style={{ fontSize: '0.875rem', color: '#6f6f6f' }}>
+            {displayedRows.length} / {tableRows.length} {t('items', 'items')}
+          </span>
+          <Button kind="ghost" size="sm" onClick={() => setShowAll(!showAll)}>
+            {showAll ? t('showPaginated', 'Show Paginated') : t('showAll', 'Show All')}
+          </Button>
+        </div>
+        {!showAll && (
+          <Pagination
+            pageNumber={currentPage}
+            totalItems={tableRows.length}
+            currentItems={paginatedVitals.length}
+            pageSize={pageSize}
+            onPageNumberChange={({ page }) => goTo(page)}
+          />
+        )}
+      </div>
+    </>
   );
 };
 
