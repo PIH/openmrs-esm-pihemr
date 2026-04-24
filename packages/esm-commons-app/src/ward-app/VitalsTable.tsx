@@ -36,10 +36,19 @@ interface Observation {
   value: number | string | object | null;
 }
 
+interface EncounterProvider {
+  provider: {
+    person: {
+      display: string;
+    };
+  };
+}
+
 interface Encounter {
   uuid: string;
   display: string;
   encounterDatetime: string;
+  encounterProviders?: EncounterProvider[];
   obs: Observation[];
 }
 
@@ -47,7 +56,8 @@ interface EncounterResponse {
   results: Encounter[];
 }
 
-const customRepresentation = 'custom:(uuid,display,encounterDatetime,obs:(uuid,concept:(uuid,name:(display)),value))';
+const customRepresentation =
+  'custom:(uuid,display,encounterDatetime,encounterProviders:(provider:(person:(display))),obs:(uuid,concept:(uuid,name:(display)),value))';
 
 const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => {
   const { concepts: externalConcepts } = useConfig<{ concepts: Record<string, string> }>({
@@ -98,9 +108,10 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     hemoglobin?: VitalCellData;
     glucose?: VitalCellData;
     fhr?: VitalCellData;
+    provider?: string;
   }
 
-  type VitalColumnKey = Exclude<keyof VitalRowData, 'id' | 'date'>;
+  type VitalColumnKey = Exclude<keyof VitalRowData, 'id' | 'date' | 'provider'>;
 
   const createVitalCellData = (value: number | string | object | null, conceptUuid?: string): VitalCellData => {
     if (value === null || value === undefined) {
@@ -199,6 +210,8 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
       {} as Record<string, number | string | object | null>,
     );
 
+    const providerName = encounter.encounterProviders?.[0]?.provider?.person?.display || '—';
+
     return {
       id: encounter.uuid,
       date: dayjs(encounter.encounterDatetime).format('DD/MM/YYYY HH:mm'),
@@ -216,6 +229,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
       hemoglobin: createVitalCellData(vitalsMap[vitalsConcepts.hemoglobin], vitalsConcepts.hemoglobin),
       glucose: createVitalCellData(vitalsMap[vitalsConcepts.glucose], vitalsConcepts.glucose),
       fhr: createVitalCellData(vitalsMap[vitalsConcepts.fhr], vitalsConcepts.fhr),
+      provider: providerName,
     };
   };
 
@@ -252,6 +266,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
   const tableHeaders = [
     { key: 'date', header: t('date', 'Date') },
     ...vitalColumns.map((col) => ({ key: col.key, header: col.label })),
+    { key: 'provider', header: t('provider', 'Provider') },
   ];
 
   return (
@@ -276,7 +291,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
                   return (
                     <TableRow {...getRowProps({ row })} key={row.id}>
                       {row.cells.map((cell) => {
-                        if (cell.info.header === 'date') {
+                        if (cell.info.header === 'date' || cell.info.header === 'provider') {
                           return <TableCell key={cell.id}>{cell.value}</TableCell>;
                         }
 
