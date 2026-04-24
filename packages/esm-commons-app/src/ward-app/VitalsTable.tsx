@@ -11,7 +11,7 @@ import {
   TableRow,
   Button,
 } from '@carbon/react';
-import { restBaseUrl, useConfig, useOpenmrsFetchAll, usePagination } from '@openmrs/esm-framework';
+import { restBaseUrl, useConfig, useOpenmrsFetchAll, usePagination, usePatient } from '@openmrs/esm-framework';
 import { Pagination, NumericObservation } from '@openmrs/esm-styleguide';
 import {
   useConceptReferenceRanges,
@@ -81,6 +81,15 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
   const { referenceRangeMap } = useConceptReferenceRanges(patientUuid, Object.values(vitalsConcepts));
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
+  const { patient } = usePatient(patientUuid);
+
+  // Check if patient is less than 30 days old
+  const isNewborn = useMemo(() => {
+    if (!patient?.birthDate) return false;
+    const birthDate = dayjs(patient.birthDate);
+    const ageInDays = dayjs().diff(birthDate, 'day');
+    return ageInDays < 30;
+  }, [patient?.birthDate]);
 
   const interpretationLabels: Record<ObservationInterpretation, string> = {
     normal: t('normal', 'Normal'),
@@ -132,17 +141,27 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     };
   };
 
-  const vitalColumns: Array<{ key: VitalColumnKey; label: string; conceptUuid?: string }> = [
-    { key: 'bp', label: t('bloodPressure', 'BP') },
-    { key: 'pulse', label: t('pulse', 'HR'), conceptUuid: vitalsConcepts.pulse },
-    { key: 'temperature', label: t('temperature', 'Temp'), conceptUuid: vitalsConcepts.temperature },
-    { key: 'respiratoryRate', label: t('respiratoryRate', 'RR'), conceptUuid: vitalsConcepts.respiratoryRate },
-    { key: 'oxygenSaturation', label: t('oxygenSaturation', 'O2 Sat'), conceptUuid: vitalsConcepts.oxygenSaturation },
-    { key: 'hemoglobin', label: t('hemoglobin', 'Hb'), conceptUuid: vitalsConcepts.hemoglobin },
-    { key: 'glucose', label: t('glucose', 'Glucose'), conceptUuid: vitalsConcepts.glucose },
-    { key: 'fhr', label: t('fetalHeartRate', 'FHR'), conceptUuid: vitalsConcepts.fhr },
-    { key: 'secondFhr', label: t('secondFetalHeartRate', '2nd FHR'), conceptUuid: vitalsConcepts.secondFhr },
-  ];
+  const vitalColumns: Array<{ key: VitalColumnKey; label: string; conceptUuid?: string }> = useMemo(() => {
+    let columns = [
+      { key: 'bp', label: t('bloodPressure', 'BP') },
+      { key: 'pulse', label: t('pulse', 'HR'), conceptUuid: vitalsConcepts.pulse },
+      { key: 'temperature', label: t('temperature', 'Temp'), conceptUuid: vitalsConcepts.temperature },
+      { key: 'respiratoryRate', label: t('respiratoryRate', 'RR'), conceptUuid: vitalsConcepts.respiratoryRate },
+      { key: 'oxygenSaturation', label: t('oxygenSaturation', 'O2 Sat'), conceptUuid: vitalsConcepts.oxygenSaturation },
+      { key: 'glucose', label: t('glucose', 'Glucose'), conceptUuid: vitalsConcepts.glucose },
+    ] as Array<{ key: VitalColumnKey; label: string; conceptUuid?: string }>;
+
+    // Only include hemoglobin, fhr, and secondFhr for patients 30 days or older
+    if (!isNewborn) {
+      columns.push(
+        { key: 'hemoglobin', label: t('hemoglobin', 'Hb'), conceptUuid: vitalsConcepts.hemoglobin },
+        { key: 'fhr', label: t('fetalHeartRate', 'FHR'), conceptUuid: vitalsConcepts.fhr },
+        { key: 'secondFhr', label: t('secondFetalHeartRate', '2nd FHR'), conceptUuid: vitalsConcepts.secondFhr },
+      );
+    }
+
+    return columns;
+  }, [isNewborn, vitalsConcepts, t]);
 
   const renderVitalCell = (
     cellData: VitalCellData | { systolic?: VitalCellData; diastolic?: VitalCellData } | undefined,
