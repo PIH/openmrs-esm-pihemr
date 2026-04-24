@@ -21,6 +21,11 @@ export const configSchema = {
       _default: '1440AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       _description: 'UUID for the Fetal heart rate concept',
     },
+    secondFhrUuid: {
+      _type: Type.ConceptUuid,
+      _default: 'fee3bcb1-209e-4eb2-9204-fbf7ca4a05d1',
+      _description: 'UUID for the Heart beat of 2nd fetus concept',
+    },
   },
 };
 
