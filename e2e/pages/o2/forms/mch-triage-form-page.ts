@@ -24,7 +24,7 @@ export class MCHTriageFormPage {
 
   @step
   async fillForm({ provider, referralFrom = 'Other', transportMethod = 'Other', disposition }: FormFields) {
-    const providerName = provider ?? process.env.E2E_DEFAULT_PROVIDER_NAME;
+    const providerName = process.env.E2E_DEFAULT_PROVIDER_NAME;
     await test.step(`Fill the MCH Triage form with provider ${provider} and disposition ${disposition}`, async () => {
       await this.o2VisitPage.page.locator('#who select').selectOption(providerName);
       await this.o2VisitPage.page.locator('#role-refer').getByLabel(referralFrom).check();
