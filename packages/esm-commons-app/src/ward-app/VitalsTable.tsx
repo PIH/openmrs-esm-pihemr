@@ -11,9 +11,13 @@ import {
   TableRow,
   Button,
 } from '@carbon/react';
-import { openmrsFetch, restBaseUrl, useConfig, usePagination } from '@openmrs/esm-framework';
-import { Pagination } from '@openmrs/esm-styleguide';
-import useSWR from 'swr';
+import { restBaseUrl, useConfig, useOpenmrsFetchAll, usePagination } from '@openmrs/esm-framework';
+import { Pagination, NumericObservation } from '@openmrs/esm-styleguide';
+import {
+  useConceptReferenceRanges,
+  calculateInterpretation,
+  type ObservationInterpretation,
+} from '../hooks/useConceptReferenceRanges';
 import dayjs from 'dayjs';
 
 interface VitalsTableProps {
@@ -63,15 +67,163 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
     glucose: localConcepts.glucoseUuid,
     fhr: localConcepts.fhrUuid,
   };
+  const { referenceRangeMap } = useConceptReferenceRanges(patientUuid, Object.values(vitalsConcepts));
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
 
-  const { data: vitalsData, error } = useSWR<EncounterResponse>(
+  const interpretationLabels: Record<ObservationInterpretation, string> = {
+    normal: t('normal', 'Normal'),
+    high: t('high', 'High'),
+    critically_high: t('criticallyHigh', 'Critically high'),
+    off_scale_high: t('offScaleHigh', 'Off scale high'),
+    low: t('low', 'Low'),
+    critically_low: t('criticallyLow', 'Critically low'),
+    off_scale_low: t('offScaleLow', 'Off scale low'),
+  };
+
+  interface VitalCellData {
+    value: number | string | object | null;
+    interpretation?: ObservationInterpretation;
+    conceptUuid?: string;
+  }
+
+  interface VitalRowData {
+    id: string;
+    date: string;
+    bp: { systolic?: VitalCellData; diastolic?: VitalCellData };
+    pulse?: VitalCellData;
+    temperature?: VitalCellData;
+    oxygenSaturation?: VitalCellData;
+    respiratoryRate?: VitalCellData;
+    hemoglobin?: VitalCellData;
+    glucose?: VitalCellData;
+    fhr?: VitalCellData;
+  }
+
+  type VitalColumnKey = Exclude<keyof VitalRowData, 'id' | 'date'>;
+
+  const createVitalCellData = (value: number | string | object | null, conceptUuid?: string): VitalCellData => {
+    if (value === null || value === undefined) {
+      return { value: null };
+    }
+
+    const numericValue = typeof value === 'object' ? undefined : value;
+    const interpretation = conceptUuid
+      ? calculateInterpretation(numericValue, referenceRangeMap[conceptUuid])
+      : undefined;
+
+    return {
+      value,
+      interpretation,
+      conceptUuid,
+    };
+  };
+
+  const vitalColumns: Array<{ key: VitalColumnKey; label: string; conceptUuid?: string }> = [
+    { key: 'bp', label: t('bloodPressure', 'BP') },
+    { key: 'pulse', label: t('pulse', 'HR'), conceptUuid: vitalsConcepts.pulse },
+    { key: 'temperature', label: t('temperature', 'Temp'), conceptUuid: vitalsConcepts.temperature },
+    { key: 'respiratoryRate', label: t('respiratoryRate', 'RR'), conceptUuid: vitalsConcepts.respiratoryRate },
+    { key: 'oxygenSaturation', label: t('oxygenSaturation', 'O2 Sat'), conceptUuid: vitalsConcepts.oxygenSaturation },
+    { key: 'hemoglobin', label: t('hemoglobin', 'Hb'), conceptUuid: vitalsConcepts.hemoglobin },
+    { key: 'glucose', label: t('glucose', 'Glucose'), conceptUuid: vitalsConcepts.glucose },
+    { key: 'fhr', label: t('fetalHeartRate', 'FHR'), conceptUuid: vitalsConcepts.fhr },
+  ];
+
+  const renderVitalCell = (
+    cellData: VitalCellData | { systolic?: VitalCellData; diastolic?: VitalCellData } | undefined,
+  ) => {
+    if (!cellData) {
+      return <span>—</span>;
+    }
+
+    // Handle BP which is an object with systolic and diastolic
+    if ('systolic' in cellData) {
+      const bpData = cellData as { systolic?: VitalCellData; diastolic?: VitalCellData };
+      return (
+        <div style={{ display: 'flex', gap: '0', alignItems: 'center' }}>
+          {bpData.systolic && (
+            <NumericObservation
+              value={
+                bpData.systolic.value !== null && bpData.systolic.value !== undefined
+                  ? String(bpData.systolic.value)
+                  : ''
+              }
+              interpretation={bpData.systolic.interpretation}
+              conceptUuid={bpData.systolic.conceptUuid}
+              variant="cell"
+              patientUuid={patientUuid}
+            />
+          )}
+          <span style={{ margin: '0 -0.25rem' }}>/</span>
+          {bpData.diastolic && (
+            <NumericObservation
+              value={
+                bpData.diastolic.value !== null && bpData.diastolic.value !== undefined
+                  ? String(bpData.diastolic.value)
+                  : ''
+              }
+              interpretation={bpData.diastolic.interpretation}
+              conceptUuid={bpData.diastolic.conceptUuid}
+              variant="cell"
+              patientUuid={patientUuid}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // Handle regular vitals
+    const vitalData = cellData as VitalCellData;
+    if (vitalData.value === null || vitalData.value === undefined) {
+      return <span>—</span>;
+    }
+
+    return (
+      <NumericObservation
+        value={String(vitalData.value)}
+        interpretation={vitalData.interpretation}
+        conceptUuid={vitalData.conceptUuid}
+        variant="cell"
+        patientUuid={patientUuid}
+      />
+    );
+  };
+
+  const createRowData = (encounter: Encounter): VitalRowData => {
+    const vitalsMap = encounter.obs.reduce(
+      (acc, obs) => {
+        acc[obs.concept.uuid] = obs.value;
+        return acc;
+      },
+      {} as Record<string, number | string | object | null>,
+    );
+
+    return {
+      id: encounter.uuid,
+      date: dayjs(encounter.encounterDatetime).format('DD/MM/YYYY HH:mm'),
+      bp: {
+        systolic: createVitalCellData(vitalsMap[vitalsConcepts.systolic], vitalsConcepts.systolic),
+        diastolic: createVitalCellData(vitalsMap[vitalsConcepts.diastolic], vitalsConcepts.diastolic),
+      },
+      pulse: createVitalCellData(vitalsMap[vitalsConcepts.pulse], vitalsConcepts.pulse),
+      temperature: createVitalCellData(vitalsMap[vitalsConcepts.temperature], vitalsConcepts.temperature),
+      oxygenSaturation: createVitalCellData(
+        vitalsMap[vitalsConcepts.oxygenSaturation],
+        vitalsConcepts.oxygenSaturation,
+      ),
+      respiratoryRate: createVitalCellData(vitalsMap[vitalsConcepts.respiratoryRate], vitalsConcepts.respiratoryRate),
+      hemoglobin: createVitalCellData(vitalsMap[vitalsConcepts.hemoglobin], vitalsConcepts.hemoglobin),
+      glucose: createVitalCellData(vitalsMap[vitalsConcepts.glucose], vitalsConcepts.glucose),
+      fhr: createVitalCellData(vitalsMap[vitalsConcepts.fhr], vitalsConcepts.fhr),
+    };
+  };
+
+  const { data: vitalsData, error } = useOpenmrsFetchAll<Encounter>(
     `${restBaseUrl}/encounter?patient=${patientUuid}&visit=${visitUuid}&order=desc&v=${customRepresentation}`,
-    (url: string) => openmrsFetch(url).then((res) => res.data),
   );
 
-  const encounters: Encounter[] = vitalsData?.results || [];
+  const encounters: Encounter[] = vitalsData || [];
 
   // Filter encounters to only include those with vitals observations
   const encountersWithVitals = encounters.filter((encounter) => {
@@ -80,33 +232,8 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
 
   // Process each encounter to extract vital signs
   const tableRows = useMemo(
-    () =>
-      encountersWithVitals.map((encounter) => {
-        const vitalsMap = encounter.obs.reduce(
-          (acc, obs) => {
-            acc[obs.concept.uuid] = obs.value;
-            return acc;
-          },
-          {} as Record<string, number | string | object | null>,
-        );
-
-        const systolic = vitalsMap[vitalsConcepts.systolic];
-        const diastolic = vitalsMap[vitalsConcepts.diastolic];
-
-        return {
-          id: encounter.uuid,
-          date: dayjs(encounter.encounterDatetime).format('DD/MM/YYYY HH:mm'),
-          bp: systolic && diastolic ? `${systolic}/${diastolic}` : '',
-          pulse: vitalsMap[vitalsConcepts.pulse] || '',
-          temperature: vitalsMap[vitalsConcepts.temperature] || '',
-          oxygenSaturation: vitalsMap[vitalsConcepts.oxygenSaturation] || '',
-          respiratoryRate: vitalsMap[vitalsConcepts.respiratoryRate] || '',
-          hemoglobin: vitalsMap[vitalsConcepts.hemoglobin] || '',
-          glucose: vitalsMap[vitalsConcepts.glucose] || '',
-          fhr: vitalsMap[vitalsConcepts.fhr] || '',
-        };
-      }),
-    [encountersWithVitals, vitalsConcepts],
+    () => encountersWithVitals.map(createRowData),
+    [encountersWithVitals, vitalsConcepts, referenceRangeMap],
   );
 
   const pageSize = 5;
@@ -124,14 +251,7 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
 
   const tableHeaders = [
     { key: 'date', header: t('date', 'Date') },
-    { key: 'bp', header: t('bloodPressure', 'BP') },
-    { key: 'pulse', header: t('pulse', 'HR') },
-    { key: 'respiratoryRate', header: t('respiratoryRate', 'RR') },
-    { key: 'temperature', header: t('temperature', 'Temp') },
-    { key: 'oxygenSaturation', header: t('oxygenSaturation', 'O2 Sat') },
-    { key: 'hemoglobin', header: t('hemoglobin', 'Hb') },
-    { key: 'glucose', header: t('glucose', 'Glucose') },
-    { key: 'fhr', header: t('fetalHeartRate', 'FHR') },
+    ...vitalColumns.map((col) => ({ key: col.key, header: col.label })),
   ];
 
   return (
@@ -150,13 +270,28 @@ const VitalsTable: React.FC<VitalsTableProps> = ({ patientUuid, visitUuid }) => 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow {...getRowProps({ row })} key={row.id}>
-                    {row.cells.map((cell) => (
-                      <TableCell key={cell.id}>{cell.value}</TableCell>
-                    ))}
-                  </TableRow>
-                ))}
+                {rows.map((row) => {
+                  const rowData = displayedRows.find((r) => r.id === row.id) as VitalRowData | undefined;
+
+                  return (
+                    <TableRow {...getRowProps({ row })} key={row.id}>
+                      {row.cells.map((cell) => {
+                        if (cell.info.header === 'date') {
+                          return <TableCell key={cell.id}>{cell.value}</TableCell>;
+                        }
+
+                        const columnKey = cell.info.header as VitalColumnKey;
+                        const cellValue = rowData?.[columnKey];
+
+                        return (
+                          <TableCell key={cell.id} style={{ padding: 0 }}>
+                            {renderVitalCell(cellValue)}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
