@@ -5,7 +5,8 @@
  * microfrontend.
  */
 
-import { getAsyncLifecycle } from '@openmrs/esm-framework';
+import { defineConfigSchema, getAsyncLifecycle } from '@openmrs/esm-framework';
+import { zebraLabelPrintConfigSchema } from './dispensing/zebra-label-print.config';
 
 const moduleName = '@pih/esm-commons-app';
 
@@ -46,4 +47,11 @@ export const triageWaitingQueueActions = getAsyncLifecycle(
   { featureName: 'triageWaitingQueueActions', moduleName },
 );
 
-export function startupApp() {}
+export const zebraLabelPrintAction = getAsyncLifecycle(
+  () => import('./dispensing/zebra-label-print-action.extension'),
+  { featureName: 'zebraLabelPrintAction', moduleName },
+);
+
+export function startupApp() {
+  defineConfigSchema(moduleName, zebraLabelPrintConfigSchema);
+}

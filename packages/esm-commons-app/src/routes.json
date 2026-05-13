@@ -28,6 +28,11 @@
       "name": "triage-waiting-queue-actions",
       "component": "triageWaitingQueueActions",
       "slot": "queue-table-triage-waiting-queue-actions-slot"
+    },
+    {
+      "name": "zebra-label-print-action",
+      "component": "zebraLabelPrintAction",
+      "slot": "medication-dispense-action-slot"
     }
   ],
   "workspaces2": [
