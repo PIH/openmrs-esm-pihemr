@@ -45,7 +45,7 @@ const MaternalTriageFormWorkspace: React.FC<Workspace2DefinitionProps<MaternalTr
 
         await endQueueEntry();
         await mutateQueueEntries();
-        closeWorkspace();
+        closeWorkspace({ discardUnsavedChanges: true });
         showSnackbar({
           isLowContrast: true,
           kind: 'success',
@@ -61,7 +61,7 @@ const MaternalTriageFormWorkspace: React.FC<Workspace2DefinitionProps<MaternalTr
   }, []);
 
   const patientUuid = patient.uuid;
-  const visitUuid = queueEntry.visit.id;
+  const visitUuid = queueEntry.visit.uuid;
 
   const elementsToHide = [
     'header',

@@ -5,8 +5,8 @@
  * microfrontend.
  */
 
-import { defineConfigSchema, getAsyncLifecycle } from '@openmrs/esm-framework';
-import { zebraLabelPrintConfigSchema } from './dispensing/zebra-label-print.config';
+import { getAsyncLifecycle, defineConfigSchema } from '@openmrs/esm-framework';
+import { configSchema } from './config-schema';
 
 const moduleName = '@pih/esm-commons-app';
 
@@ -53,5 +53,5 @@ export const zebraLabelPrintAction = getAsyncLifecycle(
 );
 
 export function startupApp() {
-  defineConfigSchema(moduleName, zebraLabelPrintConfigSchema);
+  defineConfigSchema(moduleName, configSchema);
 }

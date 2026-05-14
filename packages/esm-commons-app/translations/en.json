@@ -8,6 +8,8 @@
   "fullPregnancyDashboard": "Full Pregnancy Dashboard",
   "labelSentToPrinter": "Label sent to printer",
   "maternalTriageForm": "Maternal triage form",
+  "patientDischarged": "Patient discharged",
+  "patientDischargedMessage": "{{patientName}} has been discharged from the ward.",
   "patientHasNoActiveVisit": "Patient has no active visit",
   "printing": "Printing…",
   "printLabel": "Print label",

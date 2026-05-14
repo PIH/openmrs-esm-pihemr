@@ -1,24 +1,28 @@
 import { type Concept, type FetchResponse, openmrsFetch, restBaseUrl } from '@openmrs/esm-framework';
 import { useSWRConfig } from 'swr';
 import { type QueueEntry } from './types';
+import { useCallback, useMemo } from 'react';
 
 // Hooks here copied from esm-service-queues-app
 
 export function useMutateQueueEntries() {
-  const { mutate } = useSWRConfig();
+  const { mutate, cache } = useSWRConfig();
+  const mutateQueueEntries = useCallback(() => {
+    const promises: Promise<unknown>[] = [];
+    for (const key of cache.keys()) {
+      if (key.includes(`${restBaseUrl}/queue-entry`) || key.includes(`${restBaseUrl}/visit-queue-entry`)) {
+        promises.push(mutate(key));
+      }
+    }
+    return Promise.all(promises);
+  }, [mutate, cache]);
 
-  return {
-    mutateQueueEntries: () => {
-      return mutate((key) => {
-        return (
-          typeof key === 'string' &&
-          (key.includes(`${restBaseUrl}/queue-entry`) || key.includes(`${restBaseUrl}/visit-queue-entry`))
-        );
-      }).then(() => {
-        window.dispatchEvent(new CustomEvent('queue-entry-updated'));
-      });
-    },
-  };
+  return useMemo(
+    () => ({
+      mutateQueueEntries,
+    }),
+    [mutateQueueEntries],
+  );
 }
 
 interface TransitionQueueEntryParams {

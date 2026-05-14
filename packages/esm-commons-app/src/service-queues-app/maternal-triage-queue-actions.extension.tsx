@@ -88,7 +88,7 @@ const MaternalTriageQueueActions: React.FC<QueueTableCellComponentProps> = ({ qu
           aria-label={t('removePatient', 'Remove patient')}
           hasDivider
           onClick={() => {
-            const dispose = showModal('end-queue-entry-modal', {
+            const dispose = showModal('remove-queue-entry-modal', {
               closeModal: () => dispose(),
               queueEntry,
             });
@@ -102,7 +102,7 @@ const MaternalTriageQueueActions: React.FC<QueueTableCellComponentProps> = ({ qu
             hasDivider
             isDelete
             onClick={() => {
-              const dispose = showModal('void-queue-entry-modal', {
+              const dispose = showModal('delete-queue-entry-modal', {
                 closeModal: () => dispose(),
                 queueEntry,
               });
