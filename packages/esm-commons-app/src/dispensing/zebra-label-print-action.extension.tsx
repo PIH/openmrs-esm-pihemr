@@ -16,11 +16,12 @@ interface ZebraLabelPrintActionProps {
   medicationDispense: MedicationDispense;
   patientUuid: string;
   encounterUuid: string;
+  closeMenu?: () => void;
 }
 
 const COMPLETED_STATUS = 'completed';
 
-const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicationDispense }) => {
+const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicationDispense, closeMenu }) => {
   const { t } = useTranslation();
   const config = useConfig<ZebraLabelPrintConfig>();
   const [isPrinting, setIsPrinting] = useState(false);
@@ -30,6 +31,7 @@ const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicatio
   }
 
   const handlePrint = () => {
+    closeMenu?.();
     setIsPrinting(true);
     printDispenseLabelToZebra(
       medicationDispense.id,
