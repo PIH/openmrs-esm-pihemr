@@ -32,7 +32,7 @@
     {
       "name": "zebra-label-print-action",
       "component": "zebraLabelPrintAction",
-      "slot": "medication-dispense-action-slot"
+      "slot": "medication-dispense-action-menu-item-slot"
     }
   ],
   "workspaces2": [

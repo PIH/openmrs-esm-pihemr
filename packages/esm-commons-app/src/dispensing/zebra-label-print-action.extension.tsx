@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '@carbon/react';
-import { Printer } from '@carbon/react/icons';
+import { OverflowMenuItem } from '@carbon/react';
 import { useTranslation } from 'react-i18next';
 import { showSnackbar, useConfig } from '@openmrs/esm-framework';
 import { type ZebraLabelPrintConfig } from './zebra-label-print.config';
@@ -57,15 +56,11 @@ const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicatio
   };
 
   return (
-    <Button
-      kind="ghost"
-      size="sm"
-      renderIcon={Printer}
-      iconDescription={t('printLabel', 'Print label')}
+    <OverflowMenuItem
+      itemText={isPrinting ? t('printing', 'Printing…') : t('printLabel', 'Print label')}
       disabled={isPrinting}
-      onClick={handlePrint}>
-      {isPrinting ? t('printing', 'Printing…') : t('printLabel', 'Print label')}
-    </Button>
+      onClick={handlePrint}
+    />
   );
 };
 
