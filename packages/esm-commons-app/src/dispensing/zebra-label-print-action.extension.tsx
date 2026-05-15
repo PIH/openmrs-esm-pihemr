@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { OverflowMenuItem } from '@carbon/react';
+import { Button } from '@carbon/react';
+import { Printer } from '@carbon/react/icons';
 import { useTranslation } from 'react-i18next';
 import { showSnackbar, useConfig } from '@openmrs/esm-framework';
 import { type ConfigObject } from '../config-schema';
@@ -16,12 +17,11 @@ interface ZebraLabelPrintActionProps {
   medicationDispense: MedicationDispense;
   patientUuid: string;
   encounterUuid: string;
-  closeMenu?: () => void;
 }
 
 const COMPLETED_STATUS = 'completed';
 
-const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicationDispense, closeMenu }) => {
+const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicationDispense }) => {
   const { t } = useTranslation();
   const { medicationDispenseLabel: config } = useConfig<ConfigObject>().dispensing;
   const [isPrinting, setIsPrinting] = useState(false);
@@ -31,7 +31,6 @@ const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicatio
   }
 
   const handlePrint = () => {
-    closeMenu?.();
     setIsPrinting(true);
     printDispenseLabelToZebra(
       medicationDispense.id,
@@ -58,11 +57,9 @@ const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicatio
   };
 
   return (
-    <OverflowMenuItem
-      itemText={isPrinting ? t('printing', 'Printing…') : t('printLabel', 'Print label')}
-      disabled={isPrinting}
-      onClick={handlePrint}
-    />
+    <Button kind="ghost" size="sm" renderIcon={Printer} disabled={isPrinting} onClick={handlePrint}>
+      {isPrinting ? t('printing', 'Printing…') : t('printLabel', 'Print label')}
+    </Button>
   );
 };
 
