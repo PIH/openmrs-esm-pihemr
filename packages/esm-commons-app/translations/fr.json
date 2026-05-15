@@ -1,4 +1,10 @@
 {
+  "labelSentToPrinter": "Étiquette envoyée à l'imprimante",
   "patientVisitSummary": "Patient visit summary",
-  "visitSummary": "Visit summary"
+  "printLabel": "Imprimer l'étiquette",
+  "printLabelFailed": "Échec de l'impression de l'étiquette",
+  "printing": "Impression en cours…",
+  "success": "Succès",
+  "unknownError": "Une erreur inconnue s'est produite",
+  "visitSummary": "Résumé de la visite"
 }

@@ -47,6 +47,11 @@ export const triageWaitingQueueActions = getAsyncLifecycle(
   { featureName: 'triageWaitingQueueActions', moduleName },
 );
 
+export const zebraLabelPrintAction = getAsyncLifecycle(
+  () => import('./dispensing/zebra-label-print-action.extension'),
+  { featureName: 'zebraLabelPrintAction', moduleName },
+);
+
 export function startupApp() {
   defineConfigSchema(moduleName, configSchema);
 }
