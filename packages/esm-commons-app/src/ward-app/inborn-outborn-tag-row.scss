@@ -29,13 +29,30 @@
   margin: 0 !important; // neutralize blanket child margins applied by some card containers
   pointer-events: none; // let clicks fall through to the underlying card button
 
-  // Render the Carbon tag as the design's fully-rounded pill
-  :global(.cds--tag) {
-    margin: 0;
-    height: 1.5rem; // 24px
-    min-height: 1.5rem;
-    padding: 0 0.75rem; // 12px
-    border-radius: 62.5rem;
-    font-weight: 600;
-  }
+}
+
+// The origin badge, rendered as the design's fully-rounded pill.
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem; // 24px
+  min-height: 1.5rem;
+  padding: 0 0.75rem; // 12px
+  border-radius: 62.5rem;
+  font-size: 0.75rem; // 12px, matches Carbon tag
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+// Inborn: blue (matches the former Carbon `blue` tag colors).
+.inborn {
+  background-color: #d0e2ff;
+  color: #0043ce;
+}
+
+// Outborn: purple (matches the former Carbon `purple` tag colors).
+.outborn {
+  background-color: #e8daff;
+  color: #6929c4;
 }
