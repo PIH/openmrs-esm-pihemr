@@ -33,6 +33,11 @@
       "name": "zebra-label-print-action",
       "component": "zebraLabelPrintAction",
       "slot": "medication-dispense-action-slot"
+    },
+    {
+      "name": "inborn-outborn-tag",
+      "component": "inbornOutbornTag",
+      "slot": "maternal-ward-patient-card-header-slot"
     }
   ],
   "workspaces2": [

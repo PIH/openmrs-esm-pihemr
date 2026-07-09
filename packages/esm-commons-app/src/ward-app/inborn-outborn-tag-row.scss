@@ -1,0 +1,58 @@
+@use '@carbon/layout';
+
+/**
+ * The extension slot wrapper and its inner `Extension` wrapper are both hardcoded to
+ * `position: relative` by @openmrs/esm-framework, which would otherwise trap the absolutely
+ * positioned badge inside that small in-flow wrapper box instead of the card. `display: contents`
+ * removes those wrapper boxes from layout so the badge anchors to the `position: relative` card and
+ * pins to its top-right corner. (Sibling/`:has()` selectors still match — `display: contents` only
+ * affects box generation, not the DOM tree.)
+ */
+:global {
+  [data-extension-slot-name='maternal-ward-patient-card-header-slot'],
+  [data-extension-slot-name='maternal-ward-patient-card-header-slot'] [data-extension-id] {
+    display: contents;
+  }
+}
+
+/**
+ * Inborn/Outborn origin badge, rendered as a rounded pill pinned to the top-right corner of the
+ * patient card (per the NICU patient card design). The card container is `position: relative`, so
+ * the badge positions against the whole card regardless of where it sits in the DOM (including when
+ * it is injected through an extension slot).
+ */
+.inbornOutbornBadge {
+  position: absolute;
+  top: 0.875rem; // 14px, matches the design
+  right: 0.875rem;
+  z-index: 2; // sit above the card's clickable overlay (::before, z-index 1)
+  margin: 0 !important; // neutralize blanket child margins applied by some card containers
+  pointer-events: none; // let clicks fall through to the underlying card button
+
+}
+
+// The origin badge, rendered as the design's fully-rounded pill.
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem; // 24px
+  min-height: 1.5rem;
+  padding: 0 0.75rem; // 12px
+  border-radius: 62.5rem;
+  font-size: 0.75rem; // 12px, matches Carbon tag
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+// Inborn: blue (matches the former Carbon `blue` tag colors).
+.inborn {
+  background-color: #d0e2ff;
+  color: #0043ce;
+}
+
+// Outborn: purple (matches the former Carbon `purple` tag colors).
+.outborn {
+  background-color: #e8daff;
+  color: #6929c4;
+}

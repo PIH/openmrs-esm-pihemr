@@ -52,6 +52,11 @@ export const zebraLabelPrintAction = getAsyncLifecycle(
   { featureName: 'zebraLabelPrintAction', moduleName },
 );
 
+export const inbornOutbornTag = getAsyncLifecycle(() => import('./ward-app/inborn-outborn-tag-row.extension'), {
+  featureName: 'inbornOutbornTag',
+  moduleName,
+});
+
 export function startupApp() {
   defineConfigSchema(moduleName, configSchema);
 }
