@@ -79,7 +79,7 @@ export class WardPage {
   static async open(page: Page) {
     return test.step('When I navigate to the ward page', async () => {
       const wardPage = new WardPage(page);
-      wardPage.page.goto('/openmrs/spa/home/ward');
+      await wardPage.page.goto('/openmrs/spa/home/ward');
       return wardPage;
     });
   }
@@ -107,12 +107,16 @@ export class WardPage {
 
   @step
   async selectBed(bedNumber: string) {
-    return test.step(`When I select bed ${bedNumber} for the patient admission`, async () => {
-      if (await this.page.getByRole('combobox', { name: 'Choose an option' }).isVisible()) {
-        await this.page.getByRole('combobox', { name: 'Choose an option' }).click();
-      }
-      await this.page.getByText(new RegExp(`^${bedNumber} · `)).click();
-    });
+    // if the ward contains many beds, the bed selection will be a dropdown instead of radio buttons. Handle both cases.
+    const bedDropdown = this.page.getByRole('combobox', { name: 'Choose an option' });
+    const isDropdownVisible = await bedDropdown
+      .waitFor({ state: 'visible', timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
+    if (isDropdownVisible) {
+      await bedDropdown.click();
+    }
+    await this.page.getByText(new RegExp(`^${bedNumber} · `)).click();
   }
 
   @step
@@ -201,6 +205,20 @@ export class WardPage {
   async expectAdmissionRequestCancelled() {
     return await test.step('Then I should see success toast for cancelled admission request', async () => {
       await expect(this.page.getByText('admission request cancelled')).toBeVisible();
+    });
+  }
+
+  @step
+  async expectBedNumber(bedNumber: string) {
+    return test.step(`Then I should see bed number ${bedNumber} displayed`, async () => {
+      await expect(this.page.getByText(bedNumber, { exact: true })).toBeVisible();
+    });
+  }
+
+  @step
+  async expectBedNumberNotVisible(bedNumber: string) {
+    return test.step(`Then I should not see bed number ${bedNumber} displayed`, async () => {
+      await expect(this.page.getByText(bedNumber, { exact: true })).not.toBeVisible();
     });
   }
 }
