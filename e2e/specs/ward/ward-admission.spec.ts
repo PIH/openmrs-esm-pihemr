@@ -8,7 +8,7 @@ test.describe('Ward App', () => {
     await changeLocation(api, KGHLocationsUuids['MCOE Triage']);
   });
 
-  test('Admit a patient to a ward from the admission requests list, then transfer to another location', async ({
+  test('Admit a patient to a ward from the admission requests list, then transfer to another location, then create transfer request to yet another location and cancel it', async ({
     page,
     api,
     adultWoman,
@@ -51,6 +51,22 @@ test.describe('Ward App', () => {
     await antenatalWardPage.expectAdmissionSuccessNotification(patientName, bedNumber);
 
     await wardPage.expectPatientAdmittedToWard(adultWoman);
+
+    await wardPage.patientCard(patientName).click();
+    await wardPage.transfersButton().click();
+    await wardPage.selectLocation('Triage | MCOE');
+    await wardPage.clickSaveButton();
+    await wardPage.expectTransferRequestSubmitted(patientName);
+
+    await changeLocation(api, KGHLocationsUuids['MCOE Triage']);
+    const mcoeTriageWardPage = await WardPage.open(page);
+    await mcoeTriageWardPage.manageAdmissionRequests().click();
+    await wardPage.cancelAdmissionButton(patientName).click();
+
+    await wardPage.clinicalNotesField().fill('Patient does not require transfer at this time');
+    await wardPage.clickSaveButton();
+
+    await wardPage.expectAdmissionRequestCancelled();
   });
 
   test('Cancel a patient admission request from the ward admission requests list', async ({
