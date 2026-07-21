@@ -6,7 +6,7 @@ import {
   showSnackbar,
   Workspace2,
 } from '@openmrs/esm-framework';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import O2IFrame from './o2-iframe.component';
 import type { WardPatientWorkspaceDefinition } from './types';
@@ -23,34 +23,71 @@ const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ gro
     jQuery('#nav-buttons').hide();
 
     jQuery(document).ajaxComplete(function(event, xhr, settings) {
-      if (settings.type && settings.type.toUpperCase() === 'POST') {
-        window.parent.postMessage({ type: 'o2IframeFormSubmit' }, '*');
+      if (!settings.type || settings.type.toUpperCase() !== 'POST') {
+        return;
       }
+
+      var returnUrl = settings.data instanceof FormData ? (settings.data.get('returnUrl') || '') : '';
+
+      // A "Save & Print" form (eg. a discharge disposition) carries printForm=true in its
+      // returnUrl. When present, the form will reload the visit page and auto-print, so tell
+      // the parent a print is pending and it should wait for it before closing the workspace.
+      var printPending = returnUrl.indexOf('printForm=true') !== -1 || returnUrl.indexOf('printForm%3Dtrue') !== -1;
+
+      window.parent.postMessage({ type: 'o2IframeFormSubmit', printPending: printPending }, '*');
     });
   `;
 
+  // Holds the "is the patient discharged?" check for a submitted "Save & Print" form while we
+  // wait for that form to finish printing. Set on form submit, consumed once printing completes.
+  const pendingPrintDischargeRef = useRef<Promise<boolean> | null>(null);
+
   useEffect(() => {
+    // Returns whether the patient is no longer admitted to the ward.
+    const isPatientDischarged = () =>
+      openmrsFetch(
+        `${restBaseUrl}/emrapi/inpatient/admission?patients=${patient?.uuid}&currentInpatientLocation=${inpatientAdmission?.currentInpatientLocation?.uuid}`,
+      )
+        .then((response) => response.ok && response.data.results.length === 0)
+        .catch((error) => {
+          console.error('Error checking inpatient admission status:', error);
+          return false;
+        });
+
+    const removePatientFromWard = () => {
+      closeWorkspaceGroup2();
+      showSnackbar({
+        title: t('patientDischarged', 'Patient discharged'),
+        subtitle: t('patientDischargedMessage', '{{patientName}} has been discharged from the ward.', {
+          patientName: patient.person.display,
+        }),
+        kind: 'success',
+      });
+    };
+
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'o2IframeFormSubmit') {
-        // check whether patient is still admitted. If not, close the workspace group
-        openmrsFetch(
-          `${restBaseUrl}/emrapi/inpatient/admission?patients=${patient?.uuid}&currentInpatientLocation=${inpatientAdmission?.currentInpatientLocation?.uuid}`,
-        )
-          .then((response) => {
-            if (response.ok && response.data.results.length === 0) {
-              closeWorkspaceGroup2();
-              showSnackbar({
-                title: t('patientDischarged', 'Patient discharged'),
-                subtitle: t('patientDischargedMessage', '{{patientName}} has been discharged from the ward.', {
-                  patientName: patient.person.display,
-                }),
-                kind: 'success',
-              });
+        const dischargedPromise = isPatientDischarged();
+        if (event.data.printPending) {
+          // The form will reload the visit page and auto-print. Closing the workspace now would
+          // destroy the iframe before it can print, so defer the discharge until printing is done
+          // (see the 'o2IframeFormPrinted' message posted from visit.js once the print completes).
+          pendingPrintDischargeRef.current = dischargedPromise;
+        } else {
+          dischargedPromise.then((discharged) => {
+            if (discharged) {
+              removePatientFromWard();
             }
-          })
-          .catch((error) => {
-            console.error('Error checking inpatient admission status:', error);
           });
+        }
+      } else if (event.data?.type === 'o2IframeFormPrinted') {
+        const dischargedPromise = pendingPrintDischargeRef.current;
+        pendingPrintDischargeRef.current = null;
+        dischargedPromise?.then((discharged) => {
+          if (discharged) {
+            removePatientFromWard();
+          }
+        });
       }
     };
     window.addEventListener('message', handleMessage);
