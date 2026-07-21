@@ -27,12 +27,12 @@ const O2VisitSummaryWorkspace: React.FC<WardPatientWorkspaceDefinition> = ({ gro
         return;
       }
 
-      var returnUrl = settings.data instanceof FormData ? (settings.data.get('returnUrl') || '') : '';
+      const returnUrl = settings.data instanceof FormData ? (settings.data.get('returnUrl') || '') : '';
 
       // A "Save & Print" form (eg. a discharge disposition) carries printForm=true in its
       // returnUrl. When present, the form will reload the visit page and auto-print, so tell
       // the parent a print is pending and it should wait for it before closing the workspace.
-      var printPending = returnUrl.indexOf('printForm=true') !== -1 || returnUrl.indexOf('printForm%3Dtrue') !== -1;
+      const printPending = returnUrl.indexOf('printForm=true') !== -1 || returnUrl.indexOf('printForm%3Dtrue') !== -1;
 
       window.parent.postMessage({ type: 'o2IframeFormSubmit', printPending: printPending }, '*');
     });
