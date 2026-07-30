@@ -24,8 +24,32 @@ export class WardPage {
     return this.page.locator(`[class*="wardPatientCard"]:has-text("${patientName}")`).first();
   }
 
+  /**
+   * The workspace panel currently on top of the stack.
+   *
+   * Open workspaces are rendered as sibling panels inside #omrs-workspaces-container, all at the
+   * same position and all reported visible -- nothing distinguishes them but DOM order, so the
+   * last one is the top-most. Panels lower in the stack keep their buttons in the DOM, which is
+   * how a page-wide getByRole('button', { name: 'Admit' }) ends up matching several. The `has`
+   * filter keeps a non-workspace sibling from winning `.last()`.
+   */
+  topmostWorkspace() {
+    return this.page
+      .locator('#omrs-workspaces-container > div > div > div')
+      .filter({ has: this.page.getByRole('banner', { name: 'Workspace header' }) })
+      .last();
+  }
+
   patientSearchResult(patientName: string) {
-    return this.page.getByRole('button', { name: patientName });
+    // The search result is a <div role="banner"> with no aria-label. `banner` is a landmark
+    // role, so it is named from author only -- never from content -- which makes
+    // getByRole('banner', { name }) match nothing. Filter on text instead.
+    const result = this.page.getByRole('banner').filter({ hasText: patientName });
+    return Object.assign(result, {
+      // Exact: page-wide, a loose 'Admit' also matches the 'Admit patient' / 'Admit elsewhere'
+      // buttons in the admission requests workspace.
+      clickAdmitButton: () => result.getByRole('button', { name: 'Admit', exact: true }).click(),
+    });
   }
 
   admitPatientFromWorkspace() {
@@ -144,7 +168,7 @@ export class WardPage {
   @step
   async clickAdmitButton() {
     return test.step('When I click the "Admit" button to confirm patient admission', async () => {
-      await this.page.getByRole('button', { name: 'Admit', exact: true }).click();
+      await this.topmostWorkspace().getByRole('button', { name: 'Admit', exact: true }).click();
     });
   }
 
@@ -180,6 +204,13 @@ export class WardPage {
   async expectTransferRequestSubmitted(patientName) {
     return await test.step('Then I should see the transfer request submitted successfully', async () => {
       await expect(this.page.getByText('Transfer request created for ' + patientName)).toBeVisible();
+    });
+  }
+
+  @step
+  async expectAdmitRequestSubmitted(patientName) {
+    return await test.step('Then I should see the admit request submitted successfully', async () => {
+      await expect(this.page.getByText('Admit request created for ' + patientName)).toBeVisible();
     });
   }
 

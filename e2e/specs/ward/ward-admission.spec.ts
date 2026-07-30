@@ -118,12 +118,12 @@ test.describe('Ward App', () => {
 
     await labourAndDeliveryWardPage.selectLocation('Antenatal Ward');
     await labourAndDeliveryWardPage.clickSaveButton();
-    await labourAndDeliveryWardPage.expectTransferRequestSubmitted(patientName);
+    await labourAndDeliveryWardPage.expectAdmitRequestSubmitted(patientName);
 
     await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
     const antenatalWardPage = await WardPage.open(page);
     await antenatalWardPage.manageAdmissionRequests().click();
-    await antenatalWardPage.transferPatientButton(patientName).click();
+    await antenatalWardPage.admitPatientButton(patientName).click();
 
     const bedNumber = '1';
     await antenatalWardPage.selectBed(bedNumber);
@@ -144,7 +144,7 @@ test.describe('Ward App', () => {
     await wardPage.addPatientToWardButton().click();
     await wardPage.patientSearchBar().click();
     await wardPage.patientSearchBar().fill(patientIdentifier);
-    await wardPage.patientSearchResult(patientName).click();
+    await wardPage.patientSearchResult(patientName).clickAdmitButton();
     await wardPage.admitPatientFromWorkspace().click();
 
     const bedNumber = '1';
@@ -175,7 +175,7 @@ test.describe('Ward App', () => {
     await wardPage.addPatientToWardButton().click();
     await wardPage.patientSearchBar().click();
     await wardPage.patientSearchBar().fill(motherPatientIdentifier);
-    await wardPage.patientSearchResult(motherName).click();
+    await wardPage.patientSearchResult(motherName).clickAdmitButton();
     await wardPage.admitPatientFromWorkspace().click();
 
     const bedNumber = '1';
@@ -188,7 +188,7 @@ test.describe('Ward App', () => {
     await wardPage.addPatientToWardButton().click();
     await wardPage.patientSearchBar().click();
     await wardPage.patientSearchBar().fill(newbornPatientIdentifier);
-    await wardPage.patientSearchResult(newbornName).click();
+    await wardPage.patientSearchResult(newbornName).clickAdmitButton();
     await wardPage.admitPatientFromWorkspace().click();
 
     await wardPage.selectBed(bedNumber);
