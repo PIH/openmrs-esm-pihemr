@@ -4,6 +4,7 @@ export const KGHLocationsUuids = {
   'Antenatal Ward': '11f5c9f9-40b8-46ad-9e7e-59473ce43246',
   KGH: '074b2ab0-716a-11eb-8aa6-0242ac110002',
   'Maternity Pharmacy': '84b9b680-786c-4388-9e7c-805614c13b5a',
+  Laboratory: '0d3704ab-17f7-4272-aa1b-9118ae51acce',
 };
 
 export const KGHEmrIdSourceUuid = '809b23e3-7162-11eb-8aa6-0242ac110002';
