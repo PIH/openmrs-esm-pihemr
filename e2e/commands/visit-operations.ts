@@ -7,12 +7,12 @@ import { KGHVisitType } from '../core';
  * Mostly taken from openmrs-esm-patient-management
  */
 
-export const startVisit = async (api: APIRequestContext, patientId: string, locationUuid?: string): Promise<Visit> => {
+export const startVisit = async (api: APIRequestContext, patientId: string, locationUuid: string): Promise<Visit> => {
   const visitRes = await api.post('visit', {
     data: {
       startDatetime: dayjs().format('YYYY-MM-DDTHH:mm:ss.SSSZZ'),
       patient: patientId,
-      location: locationUuid || process.env.E2E_LOGIN_DEFAULT_LOCATION_UUID,
+      location: locationUuid,
       visitType: KGHVisitType,
       attributes: [],
     },
@@ -22,10 +22,10 @@ export const startVisit = async (api: APIRequestContext, patientId: string, loca
   return await visitRes.json();
 };
 
-export const endVisit = async (api: APIRequestContext, uuid: string, isWardTest = false) => {
+export const endVisit = async (api: APIRequestContext, uuid: string, locationUuid: string) => {
   await api.post(`visit/${uuid}`, {
     data: {
-      location: isWardTest ? process.env.E2E_WARD_LOCATION_UUID : process.env.E2E_LOGIN_DEFAULT_LOCATION_UUID,
+      location: locationUuid,
       visitType: KGHVisitType,
       stopDatetime: dayjs().format('YYYY-MM-DDTHH:mm:ss.SSSZZ'),
     },

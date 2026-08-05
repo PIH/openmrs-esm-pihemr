@@ -28,7 +28,6 @@
   z-index: 2; // sit above the card's clickable overlay (::before, z-index 1)
   margin: 0 !important; // neutralize blanket child margins applied by some card containers
   pointer-events: none; // let clicks fall through to the underlying card button
-
 }
 
 // The origin badge, rendered as the design's fully-rounded pill.

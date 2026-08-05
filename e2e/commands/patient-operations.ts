@@ -72,7 +72,7 @@ function getRandomBirthday(profile: PatientProfile): string {
 export const generateRandomPatient = async (
   api: APIRequestContext,
   profile: PatientProfile,
-  locationUuid?: string,
+  locationUuid: string,
 ): Promise<Patient> => {
   const identifierRes = await api.post(`idgen/identifiersource/${KGHEmrIdSourceUuid}/identifier`, {
     data: {},
@@ -89,7 +89,7 @@ export const generateRandomPatient = async (
         {
           identifier,
           identifierType: KGHEmrIdTypeUuid,
-          location: locationUuid || process.env.E2E_LOGIN_DEFAULT_LOCATION_UUID,
+          location: locationUuid,
           preferred: true,
         },
       ],

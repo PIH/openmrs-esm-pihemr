@@ -21,7 +21,6 @@ async function globalSetup() {
   );
   const res = await requestContext.post(`${process.env.E2E_BASE_URL}/ws/rest/v1/session`, {
     data: {
-      sessionLocation: process.env.E2E_LOGIN_DEFAULT_LOCATION_UUID,
       locale: 'en',
     },
     headers: {

@@ -31,7 +31,7 @@ export const test = base.extend<CustomTestFixtures, CustomWorkerFixtures>({
   api: [api, { scope: 'worker' }],
   adultWoman: [
     async ({ api }, use) => {
-      const patient = await generateRandomPatient(api, 'adultWomen');
+      const patient = await generateRandomPatient(api, 'adultWomen', KGHLocationsUuids.KGH);
       await use(patient);
       await deletePatient(api, patient.uuid);
     },
@@ -41,7 +41,7 @@ export const test = base.extend<CustomTestFixtures, CustomWorkerFixtures>({
     async ({ api, adultWoman }, use) => {
       const visit = await startVisit(api, adultWoman.uuid, KGHLocationsUuids.KGH);
       await use(visit);
-      await endVisit(api, visit.uuid);
+      await endVisit(api, visit.uuid, KGHLocationsUuids.KGH);
     },
     { scope: 'test' },
   ],
@@ -58,7 +58,7 @@ export const test = base.extend<CustomTestFixtures, CustomWorkerFixtures>({
     async ({ api, newborn }, use) => {
       const visit = await startVisit(api, newborn.uuid, KGHLocationsUuids.KGH);
       await use(visit);
-      await endVisit(api, visit.uuid);
+      await endVisit(api, visit.uuid, KGHLocationsUuids.KGH);
     },
     { scope: 'test' },
   ],
@@ -75,7 +75,7 @@ export const test = base.extend<CustomTestFixtures, CustomWorkerFixtures>({
     async ({ api, newborn2 }, use) => {
       const visit = await startVisit(api, newborn2.uuid, KGHLocationsUuids.KGH);
       await use(visit);
-      await endVisit(api, visit.uuid);
+      await endVisit(api, visit.uuid, KGHLocationsUuids.KGH);
     },
     { scope: 'test' },
   ],
