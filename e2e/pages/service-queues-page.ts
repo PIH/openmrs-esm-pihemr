@@ -5,7 +5,8 @@ export class ServiceQueuesPage {
   private constructor(readonly page: Page) {}
 
   // ── Header / toolbar ──────────────────────────────────────────────────────
-  readonly addPatientToQueueButton = () => this.page.getByRole('button', { name: 'Add patient to queue' }).first();
+  readonly addPatientToQueueButton = () =>
+    this.page.getByRole('button', { name: 'Add a patient to this list' }).first();
 
   // ── Add-patient workspace ─────────────────────────────────────────────────
   readonly patientSearchBar = () => this.page.getByTestId('patientSearchBar');
@@ -64,7 +65,7 @@ export class ServiceQueuesPage {
     return test.step('When I navigate to the service queues page', async () => {
       const serviceQueuesPage = new ServiceQueuesPage(page);
       await page.goto('/openmrs/spa/home/service-queues/queue-table-by-status/3113f164-68f0-11ee-ab8d-0242ac120002');
-      await page.getByRole('button', { name: 'Add patient to queue' }).first().waitFor({ state: 'visible' });
+      await page.getByRole('button', { name: 'Add a patient to this list' }).first().waitFor({ state: 'visible' });
       return serviceQueuesPage;
     });
   }
