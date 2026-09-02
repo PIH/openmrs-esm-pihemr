@@ -87,7 +87,7 @@ export default function PatientRecord({
           selectedIndex={Math.max(0, patientRecordViews.indexOf(view))}>
           <TabList aria-label={t('auditViews', 'Audit views')}>
             <Tab>{t('encounters', 'Encounters')}</Tab>
-            <Tab>{t('recordActivity', 'Record activity')}</Tab>
+            <Tab>{t('recordActivity', 'Patient activity')}</Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

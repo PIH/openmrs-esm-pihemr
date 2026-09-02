@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DismissibleTag,
-  InlineNotification,
+  InlineLoading,
   Pagination,
   SkeletonText,
   Table,
@@ -14,8 +14,7 @@ import {
   TableRow,
   Tag,
 } from '@carbon/react';
-import { ErrorState, useConfig } from '@openmrs/esm-framework';
-import { type Config } from '../config-schema';
+import { ErrorState } from '@openmrs/esm-framework';
 import { type AuditPatient } from '../types';
 import { formatAuditDatetime } from './audit-format';
 import { usePatientActivity } from './audit.resource';
@@ -38,15 +37,9 @@ const eventsPerPage = 20;
  */
 export default function PatientActivity({ patient, includeDeleted, filters, onSelectEncounter }: PatientActivityProps) {
   const { t } = useTranslation();
-  const config = useConfig<Config>();
   const [selectedUserUuid, setSelectedUserUuid] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const { events, userActivity, scannedCount, matchedCount, error, isLoading } = usePatientActivity(
-    patient,
-    includeDeleted,
-    filters,
-    config.activityScanLimit ?? 50,
-  );
+  const { events, userActivity, scanProgress, error, isLoading } = usePatientActivity(patient, includeDeleted, filters);
 
   const selectedUser = useMemo(
     () => userActivity.find((activity) => activity.userUuid === selectedUserUuid),
@@ -80,11 +73,23 @@ export default function PatientActivity({ patient, includeDeleted, filters, onSe
   );
 
   if (error) {
-    return <ErrorState error={error} headerTitle={t('recordActivity', 'Record activity')} />;
+    return <ErrorState error={error} headerTitle={t('recordActivity', 'Patient activity')} />;
   }
 
   if (isLoading) {
-    return <SkeletonText heading paragraph role="progressbar" />;
+    return (
+      <>
+        {scanProgress.total > 0 ? (
+          <InlineLoading
+            description={t('readingObservations', 'Reading observations from {{read}} of {{total}} encounters…', {
+              read: scanProgress.read,
+              total: scanProgress.total,
+            })}
+          />
+        ) : null}
+        <SkeletonText heading paragraph role="progressbar" />
+      </>
+    );
   }
 
   if (events.length === 0) {
@@ -93,22 +98,7 @@ export default function PatientActivity({ patient, includeDeleted, filters, onSe
 
   return (
     <>
-      {matchedCount > scannedCount ? (
-        <InlineNotification
-          className={styles.inlineNotification}
-          hideCloseButton
-          kind="info"
-          lowContrast
-          subtitle={t(
-            'activityScanCapped',
-            'Showing activity from the {{scannedCount}} most recent of {{matchedCount}} encounters. Narrow by encounter type or date to look further back.',
-            { matchedCount, scannedCount },
-          )}
-          title={t('partialScan', 'Part of the record')}
-        />
-      ) : null}
-
-      <h3 className={styles.sectionHeading}>{t('whoTouchedThisRecord', 'Who touched this record')}</h3>
+      <h3 className={styles.sectionHeading}>{t('whoTouchedThisRecord', 'Who modified this patient record')}</h3>
       <TableContainer className={styles.tableContainer}>
         <Table size="sm" useZebraStyles>
           <TableHead>

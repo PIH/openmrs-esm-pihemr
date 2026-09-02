@@ -78,14 +78,13 @@ function logRows() {
 
 describe('<PatientActivity />', () => {
   beforeEach(() => {
-    mockUseConfig.mockReturnValue({ activityScanLimit: 50 });
     mockRestApi();
   });
 
   it('says who touched the record and what each of them did', async () => {
     renderPatientActivity();
 
-    expect(await screen.findByText('Who touched this record')).toBeInTheDocument();
+    expect(await screen.findByText('Who modified this patient record')).toBeInTheDocument();
 
     const clerkRow = rowFor('Cos John');
     expect(within(clerkRow).getAllByRole('cell')[1]).toHaveTextContent('1');
@@ -144,8 +143,7 @@ describe('<PatientActivity />', () => {
     expect(onSelectEncounter).toHaveBeenCalledWith('enc-1');
   });
 
-  it('says so when it could only read part of the record', async () => {
-    mockUseConfig.mockReturnValue({ activityScanLimit: 1 });
+  it("reads every encounter's observations, however many there are", async () => {
     mockRestApi({
       encounterList: [
         encounters[0],
@@ -154,7 +152,34 @@ describe('<PatientActivity />', () => {
     });
     renderPatientActivity();
 
-    expect(await screen.findByText(/showing activity from the 1 most recent of 2 encounters/i)).toBeInTheDocument();
+    await screen.findByText('Activity log');
+
+    // Both encounters are created by the clerk and both contribute their observations.
+    const clerkRow = rowFor('Cos John');
+    expect(within(clerkRow).getAllByRole('cell')[1]).toHaveTextContent('2');
+    expect(within(clerkRow).getAllByRole('cell')[2]).toHaveTextContent('2');
+    expect(mockOpenmrsFetch).toHaveBeenCalledWith(expect.stringContaining('/obs?encounter=enc-1'));
+    expect(mockOpenmrsFetch).toHaveBeenCalledWith(expect.stringContaining('/obs?encounter=enc-2'));
+  });
+
+  it('says how far the observation reads have got while they run', async () => {
+    let releaseObs: (value: unknown) => void = () => {};
+    const obsGate = new Promise((resolve) => {
+      releaseObs = resolve;
+    });
+    mockOpenmrsFetch.mockImplementation((url: string) => {
+      if (url.includes('/obs?encounter=')) {
+        return obsGate.then(() => ({ data: { results: obs } })) as ReturnType<typeof openmrsFetch>;
+      }
+      return Promise.resolve({ data: { results: encounters } }) as ReturnType<typeof openmrsFetch>;
+    });
+    renderPatientActivity();
+
+    expect(await screen.findByText(/reading observations from 0 of 1 encounters/i)).toBeInTheDocument();
+
+    releaseObs(null);
+
+    expect(await screen.findByText('Activity log')).toBeInTheDocument();
   });
 
   it('says when there is nothing to show', async () => {

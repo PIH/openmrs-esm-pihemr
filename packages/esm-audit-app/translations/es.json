@@ -1,7 +1,6 @@
 {
   "action": "Acción",
   "activityLog": "Registro de actividad",
-  "activityScanCapped": "Mostrando la actividad de los {{scannedCount}} encuentros más recientes de {{matchedCount}}. Filtre por tipo de encuentro o por fecha para llegar más atrás.",
   "addedLater": "Añadido posteriormente",
   "addedLaterLegend": "registrado después de crearse el encuentro",
   "age": "Edad",
@@ -60,7 +59,6 @@
   "observations": "Observaciones",
   "obsRecordedAction": "Observación registrada",
   "obsRecordedCount": "Observaciones registradas",
-  "partialScan": "Parte del historial",
   "patient": "Paciente",
   "patientName": "Nombre del paciente",
   "patientSearchResults": "Resultados de la búsqueda de pacientes",
@@ -70,7 +68,8 @@
   "providerName": "Nombre del proveedor",
   "providers": "Proveedores",
   "questionConcept": "Concepto de la pregunta",
-  "recordActivity": "Actividad del historial",
+  "readingObservations": "Leyendo las observaciones de {{read}} de {{total}} encuentros…",
+  "recordActivity": "Actividad del paciente",
   "recordedBy": "Registrado por",
   "role": "Rol",
   "searchForPatient": "Buscar un paciente por nombre o identificador",
@@ -86,5 +85,5 @@
   "visit": "Visita",
   "wasPreviously": "era {{value}}",
   "when": "Cuándo",
-  "whoTouchedThisRecord": "Quién ha tocado este historial"
+  "whoTouchedThisRecord": "Quién ha modificado este historial del paciente"
 }

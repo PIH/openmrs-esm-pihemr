@@ -1,7 +1,6 @@
 {
   "action": "Action",
   "activityLog": "Activity log",
-  "activityScanCapped": "Showing activity from the {{scannedCount}} most recent of {{matchedCount}} encounters. Narrow by encounter type or date to look further back.",
   "addedLater": "Added later",
   "addedLaterLegend": "recorded after the encounter itself was created",
   "age": "Age",
@@ -60,7 +59,6 @@
   "observations": "Observations",
   "obsRecordedAction": "Recorded observation",
   "obsRecordedCount": "Observations recorded",
-  "partialScan": "Part of the record",
   "patient": "Patient",
   "patientName": "Patient name",
   "patientSearchResults": "Patient search results",
@@ -70,6 +68,7 @@
   "providerName": "Provider name",
   "providers": "Providers",
   "questionConcept": "Question concept",
+  "readingObservations": "Reading observations from {{read}} of {{total}} encounters…",
   "recordActivity": "Patient activity",
   "recordedBy": "Recorded by",
   "role": "Role",

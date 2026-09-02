@@ -1,5 +1,5 @@
 import React, { type PropsWithChildren } from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { SWRConfig } from 'swr';
 import { openmrsFetch } from '@openmrs/esm-framework';
 import { type AuditEncounter, type AuditPatient } from '../types';
@@ -37,7 +37,7 @@ const wrapper = ({ children }: PropsWithChildren) => (
 );
 
 function renderUsePatientEncounters(includeDeleted: boolean, filters: EncounterFilters) {
-  return renderHook(() => usePatientEncounters(patient, includeDeleted, filters, 1, 10), { wrapper });
+  return renderHook(() => usePatientEncounters(patient, includeDeleted, filters, 10), { wrapper });
 }
 
 describe('usePatientEncounters', () => {
@@ -53,7 +53,7 @@ describe('usePatientEncounters', () => {
   it('reuses one read of the deleted-encounter search across both hooks', async () => {
     const { result } = renderHook(
       () => ({
-        encounters: usePatientEncounters(patient, true, {}, 1, 10),
+        encounters: usePatientEncounters(patient, true, {}, 10),
         types: usePatientEncounterTypes(patient, true),
       }),
       { wrapper },
@@ -64,7 +64,12 @@ describe('usePatientEncounters', () => {
     expect(mockOpenmrsFetch.mock.calls.filter(([url]) => (url as string).includes('/encounter?q=')).length).toBe(1);
   });
 
-  it('has the server apply the filters when deleted encounters are excluded', async () => {
+  /** `useOpenmrsPagination` rebuilds the url through `URL`, so its params come back encoded. */
+  function lastRequestedUrl() {
+    return decodeURIComponent(mockOpenmrsFetch.mock.calls.at(-1)?.[0] as string);
+  }
+
+  it('has the server apply the filters, and page, when deleted encounters are excluded', async () => {
     const { result } = renderUsePatientEncounters(false, {
       encounterType: consultationType,
       fromDate: '2026-04-01',
@@ -72,11 +77,25 @@ describe('usePatientEncounters', () => {
     });
 
     await waitFor(() => expect(result.current.encounters).toHaveLength(1));
-    expect(mockOpenmrsFetch).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '&encounterType=type-consultation&fromdate=2026-04-01T00:00:00&todate=2026-04-30T23:59:59',
-      ),
+    expect(lastRequestedUrl()).toContain(
+      '&encounterType=type-consultation&fromdate=2026-04-01T00:00:00&todate=2026-04-30T23:59:59',
     );
+    expect(lastRequestedUrl()).toContain('&limit=10&startIndex=0&totalCount=true');
+  });
+
+  it('asks the server for the next page rather than reading the whole record', async () => {
+    mockOpenmrsFetch.mockImplementation(
+      () => Promise.resolve({ data: { results: [april], totalCount: 30 } }) as ReturnType<typeof openmrsFetch>,
+    );
+    const { result } = renderUsePatientEncounters(false, {});
+
+    await waitFor(() => expect(result.current.totalCount).toBe(30));
+    expect(result.current.currentPage).toBe(1);
+
+    act(() => result.current.goTo(3));
+
+    await waitFor(() => expect(result.current.currentPage).toBe(3));
+    expect(lastRequestedUrl()).toContain('&limit=10&startIndex=20&totalCount=true');
   });
 
   it('applies the filters on the client when deleted encounters are included', async () => {
@@ -97,7 +116,7 @@ describe('usePatientEncounters', () => {
 
   it('cannot list deleted encounters for a patient with no identifier', async () => {
     const { result } = renderHook(
-      () => usePatientEncounters({ uuid: 'patient-2', display: 'No Identifier' }, true, {}, 1, 10),
+      () => usePatientEncounters({ uuid: 'patient-2', display: 'No Identifier' }, true, {}, 10),
       { wrapper },
     );
 

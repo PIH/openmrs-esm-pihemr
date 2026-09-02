@@ -15,8 +15,8 @@ up the drill-down.
 1. **Patient search** — find the patient by name or identifier
    (`GET /ws/rest/v1/patient?q=…`).
 2. **Encounter list** — every encounter recorded for that patient, most recent first
-   (`GET /ws/rest/v1/encounter?patient=…&order=desc`), narrowable by encounter type and by the date
-   the encounter happened. The type dropdown offers only the types this patient's own encounters
+   (`GET /ws/rest/v1/encounter?patient=…&order=desc`, paged by the server through
+   `useOpenmrsPagination`), narrowable by encounter type and by the date the encounter happened. The type dropdown offers only the types this patient's own encounters
    use, read from a scan of their encounters with a rep that carries nothing but the type, so it
    never offers a type that would return nothing. Deleted encounters are hidden by default; see the
    caveat below.
@@ -56,8 +56,9 @@ The REST API's encounter-by-patient search always excludes voided encounters and
 `includeAll`. Listing deleted encounters therefore falls back to the free-text encounter search,
 which does honour it, using the patient's preferred identifier as the search phrase; because that
 search matches any patient whose name or identifier contains the phrase, the results are narrowed
-back down to the patient in hand and paginated on the client. A patient with no identifier at all
-cannot have their deleted encounters listed, and the page says so.
+back down to the patient in hand and paginated on the client — the one list that has to be read in
+full rather than a page at a time. A patient with no identifier at all cannot have their deleted
+encounters listed, and the page says so.
 
 That search also takes no filter parameters, so the encounter type and date range are applied by
 the server on the normal path (`encounterType`, `fromdate` and `todate`, which the API compares
@@ -71,15 +72,20 @@ come from once deleted encounters are shown — otherwise a type used only by a 
 would be missing from the dropdown. Both hooks build the same url, so SWR serves the second one
 from cache rather than reading it twice.
 
-### Caveat: how far the activity scan reaches
+### Caveat: what the activity view costs
 
 Encounters carry their own `auditInfo`, so who created, changed or deleted each one comes free with
-the encounter list. Observations do not: they have to be read per encounter, because the
+the encounter list.
+
+Observations do not. Each encounter's observations need their own request, because the
 obs-by-encounter search is the only one that honours `includeAll` and so the only one that can see
-deleted observations. That is one request per encounter, so the activity view reads only the
-`activityScanLimit` most recent encounters — five requests in flight at a time — and says plainly
-when it covered part of the record. Filtering by type or date is how an auditor reaches further
-back.
+deleted observations. The view reads every encounter the filters match, which makes it complete but
+means **one request per encounter** — five in flight at a time, with the running count shown while
+it works. On a long record over a slow link that is a real wait, and filtering by encounter type or
+date is the way to keep it short.
+
+This is a deliberate choice to favour completeness over speed while the view is new; a cap is the
+obvious lever if it proves too slow in the field.
 
 ## Enabling the app
 
@@ -108,4 +114,3 @@ for information about how to provide configuration files.
 | `patientSearchPageSize` | `10`                                               | Patients per page of search results.               |
 | `encountersPageSize`    | `10`                                               | Encounters per page of a patient's encounter list.  |
 | `patientChartUrl`       | `${openmrsSpaBase}/patient/${patientUuid}/chart`   | Where the patient's name in the encounter audit links to. |
-| `activityScanLimit`     | `50`                                               | How many encounters the activity view reads observations from. |

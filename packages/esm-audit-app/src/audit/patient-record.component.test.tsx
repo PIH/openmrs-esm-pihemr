@@ -94,7 +94,6 @@ function renderPatientRecord() {
 describe('<PatientRecord />', () => {
   beforeEach(() => {
     mockUseConfig.mockReturnValue({
-      activityScanLimit: 50,
       patientChartUrl: '${openmrsSpaBase}/patient/${patientUuid}/chart',
     });
     mockRestApi();
@@ -187,7 +186,7 @@ describe('<PatientRecord />', () => {
     const { onSelectView } = renderPatientRecord();
     await screen.findByRole('cell', { name: 'Oncology Consultation' });
 
-    await userEvent.click(screen.getByRole('tab', { name: /record activity/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /patient activity/i }));
 
     expect(onSelectView).toHaveBeenCalledWith('activity');
   });

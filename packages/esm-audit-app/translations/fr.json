@@ -1,7 +1,6 @@
 {
   "action": "Action",
   "activityLog": "Journal d'activité",
-  "activityScanCapped": "Affichage de l'activité des {{scannedCount}} rencontres les plus récentes sur {{matchedCount}}. Filtrez par type de rencontre ou par date pour remonter plus loin.",
   "addedLater": "Ajouté ultérieurement",
   "addedLaterLegend": "enregistré après la création de la rencontre",
   "age": "Âge",
@@ -60,7 +59,6 @@
   "observations": "Observations",
   "obsRecordedAction": "Observation enregistrée",
   "obsRecordedCount": "Observations enregistrées",
-  "partialScan": "Une partie du dossier",
   "patient": "Patient",
   "patientName": "Nom du patient",
   "patientSearchResults": "Résultats de la recherche de patients",
@@ -70,7 +68,8 @@
   "providerName": "Nom du prestataire de service",
   "providers": "Prestataires de service",
   "questionConcept": "Concept de la question",
-  "recordActivity": "Activité du dossier",
+  "readingObservations": "Lecture des observations de {{read}} rencontres sur {{total}}…",
+  "recordActivity": "Activité du patient",
   "recordedBy": "Enregistré par",
   "role": "Rôle",
   "searchForPatient": "Rechercher un patient par nom ou numéro d'identification",
@@ -86,5 +85,5 @@
   "visit": "Visite",
   "wasPreviously": "était {{value}}",
   "when": "Quand",
-  "whoTouchedThisRecord": "Qui a touché à ce dossier"
+  "whoTouchedThisRecord": "Qui a modifié ce dossier patient"
 }

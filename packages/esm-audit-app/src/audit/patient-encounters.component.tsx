@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DataTableSkeleton,
@@ -49,21 +49,15 @@ export default function PatientEncounters({
 }: PatientEncountersProps) {
   const { t } = useTranslation();
   const config = useConfig<Config>();
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(config.encountersPageSize ?? 10);
   const pageSizes = useMemo(() => Array.from(new Set([pageSize, 10, 20, 50])).sort((a, b) => a - b), [pageSize]);
 
-  const { encounters, totalCount, error, isLoading } = usePatientEncounters(
+  const { encounters, totalCount, currentPage, goTo, error, isLoading } = usePatientEncounters(
     patient,
     includeDeleted,
     filters,
-    page,
     pageSize,
   );
-
-  useEffect(() => {
-    setPage(1);
-  }, [filters, includeDeleted, patient?.uuid]);
 
   if (error) {
     return <ErrorState error={error} headerTitle={t('encounters', 'Encounters')} />;
@@ -126,10 +120,10 @@ export default function PatientEncounters({
       </TableContainer>
       <Pagination
         onChange={({ page: nextPage, pageSize: nextPageSize }) => {
-          setPage(nextPage);
           setPageSize(nextPageSize);
+          goTo(nextPage);
         }}
-        page={page}
+        page={currentPage}
         pageSize={pageSize}
         pageSizes={pageSizes}
         size="sm"

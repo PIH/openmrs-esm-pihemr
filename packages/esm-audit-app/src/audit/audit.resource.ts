@@ -1,6 +1,12 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { type FetchResponse, openmrsFetch, restBaseUrl } from '@openmrs/esm-framework';
+import {
+  type FetchResponse,
+  openmrsFetch,
+  restBaseUrl,
+  useOpenmrsFetchAll,
+  useOpenmrsPagination,
+} from '@openmrs/esm-framework';
 import { type AuditEncounter, type AuditObs, type AuditPatient, type ObsTreeNode, type PagedResponse } from '../types';
 import {
   buildEncounterFilterQuery,
@@ -47,14 +53,26 @@ const noFilters: EncounterFilters = {};
 /** Just enough of an obs to say who touched it and when. */
 const activityObsRep = 'custom:(uuid,voided,concept:(uuid,display),previousVersion:(uuid),auditInfo)';
 
-/** The REST API caps `limit` server-side, so bulk reads are fetched a page at a time. */
+/**
+ * The framework's paging hooks default to their own binding of `openmrsFetch`; naming ours keeps
+ * every request this module makes going through the one function, which is also what lets tests
+ * stand in for it.
+ */
+const restFetchOptions = { fetcher: openmrsFetch };
+
+/**
+ * The page size asked for on bulk reads. Without it the server falls back to
+ * `webservices.rest.maxResultsDefault`, which is 50 by default and means more round trips.
+ */
 const bulkPageSize = 100;
 const maxBulkPages = 25;
 
 /**
- * Reads every page of a paginated REST endpoint. The `next` link the API returns is built from the
- * server's configured URI prefix, which is not always reachable from the browser, so this walks
- * `startIndex` itself instead of following the link.
+ * Reads every page of a paginated REST endpoint imperatively.
+ *
+ * `useOpenmrsFetchAll` covers this wherever the url is known at render time. The activity scan is
+ * the exception: it reads the observations of many encounters, and a hook cannot be called once
+ * per encounter, so that one loop needs a plain function.
  */
 async function fetchAllPages<T>(url: string): Promise<Array<T>> {
   const results: Array<T> = [];
@@ -150,7 +168,8 @@ export function canListDeletedEncounters(patient: AuditPatient | undefined): boo
 function deletedEncountersUrl(patient: AuditPatient | undefined): string | null {
   const searchPhrase = encounterSearchPhrase(patient);
   return patient && searchPhrase
-    ? `${restBaseUrl}/encounter?q=${encodeURIComponent(searchPhrase)}&includeAll=true&v=${encounterListRep}`
+    ? `${restBaseUrl}/encounter?q=${encodeURIComponent(searchPhrase)}&includeAll=true&v=${encounterListRep}` +
+        `&limit=${bulkPageSize}`
     : null;
 }
 
@@ -172,13 +191,13 @@ export function useAllPatientEncounters(
   const scanUrl =
     patient && !includeDeleted
       ? `${restBaseUrl}/encounter?patient=${patient.uuid}&v=${encounterListRep}` +
-        `${buildEncounterFilterQuery(filters)}&order=desc`
+        `${buildEncounterFilterQuery(filters)}&order=desc&limit=${bulkPageSize}`
       : null;
-  const scanResult = useSWR<Array<AuditEncounter>>(scanUrl, fetchAllPages);
-
-  const bulkResult = useSWR<Array<AuditEncounter>>(
-    includeDeleted ? deletedEncountersUrl(patient) : null,
-    fetchAllPages,
+  // `useOpenmrsFetchAll` takes a null url to mean "do not fetch", though its type does not say so.
+  const scanResult = useOpenmrsFetchAll<AuditEncounter>(scanUrl as string, restFetchOptions);
+  const bulkResult = useOpenmrsFetchAll<AuditEncounter>(
+    (includeDeleted ? deletedEncountersUrl(patient) : null) as string,
+    restFetchOptions,
   );
 
   const encounters = useMemo(() => {
@@ -210,59 +229,94 @@ export function usePatientEncounterTypes(patient: AuditPatient | undefined, incl
 }
 
 /**
- * Lists a patient's encounters, optionally narrowed by encounter type and date range.
+ * One page of a patient's encounters, optionally narrowed by encounter type and date range, with
+ * the page to show and the callback to change it — whichever of the two paths below is in use.
+ */
+interface PatientEncountersResult {
+  encounters: Array<AuditEncounter>;
+  totalCount: number;
+  currentPage: number;
+  goTo(page: number): void;
+  error: unknown;
+  isLoading: boolean;
+  /** True when the patient has no identifier to run the deleted-encounter search with. */
+  cannotIncludeDeleted: boolean;
+}
+
+/**
+ * Lists a patient's encounters, a page at a time.
  *
- * The API's encounter-by-patient search always excludes voided encounters, so showing deleted
- * encounters means falling back to the free-text encounter search, which does honour
- * `includeAll`, with the patient's identifier as the search phrase. That search matches any
- * patient whose name or identifier contains the phrase, so the results are narrowed back down to
- * the patient in hand, and paginated on the client. It also takes no filter parameters, so the
- * filters are applied on the client for that path and by the server for the other.
+ * Live encounters are paged by the server: `useOpenmrsPagination` owns the page number and asks
+ * for one page at a time, so the size of a patient's record costs nothing to display.
+ *
+ * Deleted encounters cannot be paged that way. The encounter-by-patient search always excludes
+ * voided encounters, so showing them means falling back to the free-text encounter search, which
+ * does honour `includeAll` but matches any patient whose name or identifier contains the phrase
+ * and takes no filter parameters. Its results therefore have to be read in full, narrowed to the
+ * patient in hand, filtered, and paged here — the one case where the whole list is fetched.
  */
 export function usePatientEncounters(
   patient: AuditPatient | undefined,
   includeDeleted: boolean,
   filters: EncounterFilters,
-  page: number,
   pageSize: number,
-) {
-  const startIndex = (page - 1) * pageSize;
-
+): PatientEncountersResult {
   const pagedUrl =
     patient && !includeDeleted
       ? `${restBaseUrl}/encounter?patient=${patient.uuid}&v=${encounterListRep}` +
-        `${buildEncounterFilterQuery(filters)}&order=desc&startIndex=${startIndex}&limit=${pageSize}&totalCount=true`
+        `${buildEncounterFilterQuery(filters)}&order=desc`
       : null;
-  const pagedResult = useSWR<FetchResponse<PagedResponse<AuditEncounter>>>(pagedUrl, openmrsFetch);
+  // `useOpenmrsPagination` appends limit, startIndex and totalCount itself, so the url omits them.
+  const pagedResult = useOpenmrsPagination<AuditEncounter>(pagedUrl as string, pageSize, restFetchOptions);
 
-  const bulkResult = useSWR<Array<AuditEncounter>>(
-    includeDeleted ? deletedEncountersUrl(patient) : null,
-    fetchAllPages,
+  const bulkResult = useOpenmrsFetchAll<AuditEncounter>(
+    (includeDeleted ? deletedEncountersUrl(patient) : null) as string,
+    restFetchOptions,
   );
+  const [clientPage, setClientPage] = useState(1);
 
-  const allEncounters = useMemo(() => {
+  const deletedEncounters = useMemo(() => {
     if (!includeDeleted) {
-      return null;
+      return [];
     }
     return encountersForPatient(bulkResult.data, patient)
       .filter((encounter) => matchesEncounterFilters(encounter, filters))
       .sort((a, b) => (b.encounterDatetime ?? '').localeCompare(a.encounterDatetime ?? ''));
   }, [bulkResult.data, filters, includeDeleted, patient]);
 
+  /**
+   * A filter, the deleted toggle or a different patient changes which encounters exist, so the
+   * paging starts over. `goTo` refuses a page it considers out of bounds, so it is only called
+   * when there is somewhere to go back from.
+   */
+  useEffect(() => {
+    setClientPage(1);
+    if (pagedResult.currentPage !== 1) {
+      pagedResult.goTo(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, includeDeleted, patient?.uuid]);
+
   if (includeDeleted) {
+    const totalPages = Math.max(1, Math.ceil(deletedEncounters.length / pageSize));
+    const currentPage = Math.min(clientPage, totalPages);
     return {
-      encounters: (allEncounters ?? []).slice(startIndex, startIndex + pageSize),
-      totalCount: allEncounters?.length ?? 0,
+      encounters: deletedEncounters.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+      totalCount: deletedEncounters.length,
+      currentPage,
+      goTo: setClientPage,
       error: bulkResult.error,
       isLoading: bulkResult.isLoading,
-      /** True when the patient has no identifier to run the deleted-encounter search with. */
       cannotIncludeDeleted: Boolean(patient) && !canListDeletedEncounters(patient),
     };
   }
 
   return {
-    encounters: pagedResult.data?.data?.results ?? [],
-    totalCount: pagedResult.data?.data?.totalCount ?? pagedResult.data?.data?.results?.length ?? 0,
+    encounters: pagedResult.data ?? [],
+    // The hook reports NaN until the first page has been read.
+    totalCount: Number.isNaN(pagedResult.totalCount) ? 0 : pagedResult.totalCount,
+    currentPage: pagedResult.currentPage,
+    goTo: pagedResult.goTo,
     error: pagedResult.error,
     isLoading: pagedResult.isLoading,
     cannotIncludeDeleted: false,
@@ -282,8 +336,10 @@ export function useEncounterAudit(encounterUuid: string | null): {
   const encounterUrl = encounterUuid ? `${restBaseUrl}/encounter/${encounterUuid}?v=${encounterDetailRep}` : null;
   const encounterResult = useSWR<FetchResponse<AuditEncounter>>(encounterUrl, openmrsFetch);
 
-  const obsUrl = encounterUuid ? `${restBaseUrl}/obs?encounter=${encounterUuid}&includeAll=true&v=${obsRep}` : null;
-  const obsResult = useSWR<Array<AuditObs>>(obsUrl, fetchAllPages);
+  const obsUrl = encounterUuid
+    ? `${restBaseUrl}/obs?encounter=${encounterUuid}&includeAll=true&v=${obsRep}&limit=${bulkPageSize}`
+    : null;
+  const obsResult = useOpenmrsFetchAll<AuditObs>(obsUrl as string, restFetchOptions);
 
   const encounter = encounterResult.data?.data;
   const obsTree = useMemo(() => buildObsTree(obsResult.data ?? [], encounter), [obsResult.data, encounter]);
@@ -300,17 +356,19 @@ export function useEncounterAudit(encounterUuid: string | null): {
  * Who touched this patient's record: every creation, edit and deletion across their encounters,
  * summarised per user and listed in order.
  *
- * The encounter rows carry their own `auditInfo`, but the observations do not come with them —
- * they have to be read per encounter, since that is the only obs search that honours
- * `includeAll` and so the only one that can see deleted observations. That is one request per
- * encounter, so the scan is capped at the `scanLimit` most recent encounters and reports what it
- * covered; narrowing by type or date is how an auditor reaches further back.
+ * Encounter rows carry their own `auditInfo`, and every matching encounter has already been read,
+ * so who created, changed and deleted encounters comes free.
+ *
+ * Observations do not: each encounter's observations need their own request, because the
+ * obs-by-encounter search is the only one that honours `includeAll` and so the only one that can
+ * see deleted observations. Every matching encounter is read all the same, so the view is complete
+ * — which means a patient with a long record costs one request per encounter, a few at a time.
+ * `scanProgress` is reported so the caller can show how far it has got.
  */
 export function usePatientActivity(
   patient: AuditPatient | undefined,
   includeDeleted: boolean,
   filters: EncounterFilters,
-  scanLimit: number,
 ) {
   const {
     encounters,
@@ -318,31 +376,33 @@ export function usePatientActivity(
     isLoading: isLoadingEncounters,
   } = useAllPatientEncounters(patient, includeDeleted, filters);
 
-  const scannedEncounters = useMemo(() => encounters.slice(0, scanLimit), [encounters, scanLimit]);
-  const scannedUuids = useMemo(() => scannedEncounters.map((encounter) => encounter.uuid), [scannedEncounters]);
+  const [encountersRead, setEncountersRead] = useState(0);
+  const encounterUuids = useMemo(() => encounters.map((encounter) => encounter.uuid), [encounters]);
 
   const obsResult = useSWR<ObsByEncounter>(
-    scannedUuids.length ? ['audit-activity-obs', scannedUuids] : null,
+    encounterUuids.length ? ['audit-activity-obs', encounterUuids] : null,
     async () => {
-      const perEncounter = await mapWithConcurrency(scannedUuids, scanConcurrency, (encounterUuid) =>
-        fetchAllPages<AuditObs>(`${restBaseUrl}/obs?encounter=${encounterUuid}&includeAll=true&v=${activityObsRep}`),
-      );
-      return Object.fromEntries(scannedUuids.map((encounterUuid, index) => [encounterUuid, perEncounter[index]]));
+      setEncountersRead(0);
+      let read = 0;
+      const perEncounter = await mapWithConcurrency(encounterUuids, scanConcurrency, async (encounterUuid) => {
+        const obs = await fetchAllPages<AuditObs>(
+          `${restBaseUrl}/obs?encounter=${encounterUuid}&includeAll=true&v=${activityObsRep}`,
+        );
+        setEncountersRead((read += 1));
+        return obs;
+      });
+      return Object.fromEntries(encounterUuids.map((encounterUuid, index) => [encounterUuid, perEncounter[index]]));
     },
   );
 
-  const events = useMemo(
-    () => buildAuditEvents(scannedEncounters, obsResult.data ?? {}),
-    [obsResult.data, scannedEncounters],
-  );
+  const events = useMemo(() => buildAuditEvents(encounters, obsResult.data ?? {}), [encounters, obsResult.data]);
   const userActivity = useMemo(() => summariseByUser(events), [events]);
 
   return {
     events,
     userActivity,
-    /** How many encounters were read, and how many matched — they differ when the cap bites. */
-    scannedCount: scannedEncounters.length,
-    matchedCount: encounters.length,
+    /** How far the observation reads have got, for a view that has to wait on a long record. */
+    scanProgress: { read: encountersRead, total: encounterUuids.length },
     error: encountersError ?? obsResult.error,
     isLoading: isLoadingEncounters || obsResult.isLoading,
   };

@@ -19,14 +19,6 @@ export const configSchema = {
     _default: 10,
     _validators: [validators.inRange(1, 100)],
   },
-  activityScanLimit: {
-    _type: Type.Number,
-    _description:
-      "How many of a patient's most recent encounters the record activity view reads observations " +
-      'from. Each encounter costs one request, so this bounds how much work a scan can do.',
-    _default: 50,
-    _validators: [validators.inRange(1, 200)],
-  },
   patientChartUrl: {
     _type: Type.String,
     _description:
@@ -38,7 +30,6 @@ export const configSchema = {
 };
 
 export interface Config {
-  activityScanLimit: number;
   patientSearchPageSize: number;
   encountersPageSize: number;
   patientChartUrl: string;
