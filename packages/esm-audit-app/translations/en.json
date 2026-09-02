@@ -70,7 +70,7 @@
   "providerName": "Provider name",
   "providers": "Providers",
   "questionConcept": "Question concept",
-  "recordActivity": "Record activity",
+  "recordActivity": "Patient activity",
   "recordedBy": "Recorded by",
   "role": "Role",
   "searchForPatient": "Search for a patient by name or identifier",
@@ -86,5 +86,5 @@
   "visit": "Visit",
   "wasPreviously": "was {{value}}",
   "when": "When",
-  "whoTouchedThisRecord": "Who touched this record"
+  "whoTouchedThisRecord": "Who modified this patient record"
 }
