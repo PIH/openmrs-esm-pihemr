@@ -1,0 +1,171 @@
+@use '@carbon/layout';
+@use '@carbon/type';
+@use '@openmrs/esm-styleguide/src/vars' as *;
+
+.container {
+  background-color: $ui-background;
+  min-height: 100%;
+  padding-bottom: layout.$spacing-07;
+}
+
+.pageHeader {
+  margin-bottom: layout.$spacing-05;
+}
+
+.section {
+  padding: 0 layout.$spacing-05;
+}
+
+.sectionHeading {
+  @include type.type-style('productive-heading-02');
+  color: $text-02;
+  margin: layout.$spacing-05 0 layout.$spacing-03;
+}
+
+.contextHeader {
+  display: flex;
+  flex-direction: column;
+  gap: layout.$spacing-02;
+  margin-bottom: layout.$spacing-05;
+}
+
+.contextTitle {
+  @include type.type-style('productive-heading-03');
+  color: $color-gray-100;
+}
+
+.contextSubtitle {
+  @include type.type-style('body-long-01');
+  color: $text-02;
+}
+
+.backButton {
+  margin-left: -#{layout.$spacing-05};
+}
+
+.searchInput {
+  max-width: 30rem;
+  margin-bottom: layout.$spacing-05;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: layout.$spacing-05;
+  margin-bottom: layout.$spacing-03;
+}
+
+.tableContainer {
+  margin-bottom: layout.$spacing-03;
+}
+
+/* The whole row is the target for opening a patient or an encounter. */
+.clickableRow {
+  cursor: pointer;
+}
+
+.summaryList {
+  background-color: $ui-01;
+  margin-bottom: layout.$spacing-05;
+}
+
+.summaryLabel {
+  @include type.type-style('productive-heading-01');
+  color: $text-02;
+  width: 14rem;
+}
+
+.summaryValue {
+  @include type.type-style('body-short-01');
+  color: $color-gray-100;
+}
+
+/* Voided rows keep the legacy admin page's struck-through, muted look. */
+.voidedRow td {
+  color: $text-02;
+  text-decoration: line-through;
+}
+
+.obsConcept {
+  @include type.type-style('body-short-01');
+}
+
+.obsDescription {
+  @include type.type-style('label-01');
+  color: $text-02;
+  padding: 0 0 layout.$spacing-03;
+  text-decoration: none;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: layout.$spacing-03 layout.$spacing-05;
+  margin-bottom: layout.$spacing-05;
+}
+
+.legendItem {
+  @include type.type-style('label-01');
+  color: $text-02;
+  display: flex;
+  align-items: center;
+  gap: layout.$spacing-02;
+}
+
+.emptyState {
+  @include type.type-style('body-long-01');
+  color: $text-02;
+  padding: layout.$spacing-05 0;
+}
+
+.inlineNotification {
+  max-width: none;
+  margin-bottom: layout.$spacing-05;
+}
+
+/* A table cell that opens a drill-down: looks like a link, behaves like a button. */
+.linkButton {
+  @include type.type-style('body-short-01');
+  background: none;
+  border: none;
+  color: $interactive-01;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: layout.$spacing-05;
+  margin-bottom: layout.$spacing-05;
+}
+
+.filterControl {
+  min-width: 16rem;
+}
+
+/* Sits on the same baseline as the filter inputs, which carry their own labels. */
+.clearFilters {
+  margin-bottom: layout.$spacing-01;
+}
+
+.logHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: layout.$spacing-03;
+}
+
+/* Marks the user whose events the activity log is showing. */
+.selectedRow td {
+  background-color: $color-blue-10;
+}

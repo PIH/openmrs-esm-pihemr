@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.openmrs.org/routes.schema.json",
+  "extensions": [
+    {
+      "name": "audit-dashboard-link",
+      "slot": "homepage-dashboard-slot",
+      "component": "auditDashboardLink",
+      "meta": {
+        "name": "audit",
+        "slot": "audit-dashboard-slot",
+        "title": "Audit"
+      }
+    },
+    {
+      "name": "audit-dashboard",
+      "slot": "audit-dashboard-slot",
+      "component": "root"
+    }
+  ]
+}
