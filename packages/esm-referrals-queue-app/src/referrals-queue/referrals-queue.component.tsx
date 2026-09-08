@@ -4,10 +4,10 @@ import 'react-dates/initialize';
 import moment from 'moment';
 import { Content, Tile, Heading, Search, Dropdown, DatePicker, DatePickerInput } from '@carbon/react';
 import 'moment/locale/fr';
-import { createErrorHandler } from '@openmrs/esm-framework';
+import { createErrorHandler, useLocations, useSession } from '@openmrs/esm-framework';
 import Table from '../table/referrals-table.component';
 import styles from './referrals-queue.scss';
-import { getReferrals } from './referrals-queue.resource';
+import { findNearestVisitLocationUuid, getReferrals } from './referrals-queue.resource';
 
 export default function ReferralsQueue(props: ReferralsQueueProps) {
   const [referrals, setReferrals]: [Referral[], Function] = React.useState([]);
@@ -19,6 +19,33 @@ export default function ReferralsQueue(props: ReferralsQueueProps) {
   const [ptQuery, setPtQuery] = React.useState('');
   const { t, i18n } = useTranslation();
 
+  const locations = useLocations('Visit Location');
+  const { sessionLocation } = useSession();
+  const [locationUuid, setLocationUuid] = React.useState<string>(undefined);
+
+  React.useEffect(() => {
+    if (locationUuid || !sessionLocation || locations.length === 0) {
+      return;
+    }
+
+    const visitLocationUuids = new Set(locations.map((location) => location.uuid));
+
+    if (visitLocationUuids.has(sessionLocation.uuid)) {
+      setLocationUuid(sessionLocation.uuid);
+      return;
+    }
+
+    let cancelled = false;
+    findNearestVisitLocationUuid(sessionLocation.uuid, visitLocationUuids).then((matchedUuid) => {
+      if (!cancelled && matchedUuid) {
+        setLocationUuid(matchedUuid);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [locationUuid, sessionLocation, locations]);
+
   const languageMatches = i18n.language?.match(/^(en|fr|ht).*/);
   const language = (languageMatches && languageMatches[1]) || 'en';
 
@@ -27,15 +54,16 @@ export default function ReferralsQueue(props: ReferralsQueueProps) {
   }, [language]);
 
   React.useEffect(() => {
-    if (fromDate && toDate) {
+    if (fromDate && toDate && locationUuid) {
       const sub = getReferrals({
         fromDate: fromDate.format('YYYY-MM-DD'),
         toDate: toDate.format('YYYY-MM-DD'),
         locale: language,
+        locationUuid,
       }).subscribe((referrals) => setReferrals(referrals), createErrorHandler());
       return () => sub.unsubscribe();
     }
-  }, [fromDate, toDate, language]);
+  }, [fromDate, toDate, language, locationUuid]);
 
   const filteredReferrals = referrals
     .filter(
@@ -73,6 +101,19 @@ export default function ReferralsQueue(props: ReferralsQueueProps) {
               <DatePickerInput id="from-date" labelText={t('from', 'From')} />
               <DatePickerInput id="to-date" labelText={t('to', 'To')} />
             </DatePicker>
+          </div>
+          <div className={styles.inputContainer}>
+            <div style={{ width: 400 }}>
+              <Dropdown
+                id="location"
+                label={t('select-location', 'Select Location')}
+                titleText={t('location', 'Location')}
+                items={locations}
+                itemToString={(location) => location?.display ?? ''}
+                selectedItem={locations.find((location) => location.uuid === locationUuid) ?? null}
+                onChange={(e) => setLocationUuid(e.selectedItem?.uuid)}
+              />
+            </div>
           </div>
           <div className={styles.inputContainer}>
             <div style={{ width: 400 }}>
