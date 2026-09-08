@@ -3,17 +3,27 @@ import { of } from 'rxjs';
 import { render, fireEvent, screen, within, waitFor } from '@testing-library/react';
 import MockDate from 'mockdate';
 import ReferralsQueue from './referrals-queue.component';
-import { getReferrals } from './referrals-queue.resource';
+import { findNearestVisitLocationUuid, getReferrals } from './referrals-queue.resource';
 
 const mockedUseConfig = jest.fn();
+const mockedUseLocations = jest.fn();
+const mockedUseSession = jest.fn();
 
 jest.mock('./referrals-queue.resource');
 jest.mock('@openmrs/esm-framework', () => ({
   ...jest.requireActual('@openmrs/esm-framework'),
   useConfig: () => mockedUseConfig(),
+  useLocations: () => mockedUseLocations(),
+  useSession: () => mockedUseSession(),
 }));
 
 const mockedGetReferrals = getReferrals as jest.Mock;
+const mockedFindNearestVisitLocationUuid = findNearestVisitLocationUuid as jest.Mock;
+
+const locations = [
+  { uuid: 'location-uuid-1', display: 'Mirebalais Hospital' },
+  { uuid: 'location-uuid-2', display: 'Cange Clinic' },
+];
 
 const referrals = [
   {
@@ -62,6 +72,8 @@ window.location = { href: '/referrals-queue' };
 
 describe('referrals queue', () => {
   const todayString = '2020-10-31';
+  let view: ReturnType<typeof render>;
+
   beforeAll(() => {
     mockedUseConfig.mockReturnValue({
       links: {
@@ -79,7 +91,11 @@ describe('referrals queue', () => {
     MockDate.set(todayString + 'T10:00:00.000-0400');
     mockedGetReferrals.mockReset();
     mockedGetReferrals.mockReturnValue(of(referrals));
-    render(<ReferralsQueue />);
+    mockedUseLocations.mockReturnValue(locations);
+    mockedUseSession.mockReturnValue({ sessionLocation: locations[0] });
+    mockedFindNearestVisitLocationUuid.mockReset();
+    mockedFindNearestVisitLocationUuid.mockResolvedValue(undefined);
+    view = render(<ReferralsQueue />);
   });
 
   afterEach(() => {
@@ -164,6 +180,42 @@ describe('referrals queue', () => {
       }),
     );
     expect(screen.queryByText('Test Referral Type', { selector: 'span' })).not.toBeNull();
+  });
+
+  it('defaults the location dropdown to the session location', () => {
+    screen.getByText(locations[0].display, { selector: 'span' });
+  });
+
+  it('resolves the location dropdown to the nearest visit-location ancestor when the session location is a descendant', async () => {
+    view.unmount();
+    const deskLocation = { uuid: 'desk-uuid', display: 'Front Desk' };
+    mockedUseSession.mockReturnValue({ sessionLocation: deskLocation });
+    mockedFindNearestVisitLocationUuid.mockResolvedValue(locations[1].uuid);
+
+    render(<ReferralsQueue />);
+
+    await waitFor(() => {
+      screen.getByText(locations[1].display, { selector: 'span' });
+    });
+
+    expect(mockedFindNearestVisitLocationUuid).toHaveBeenCalledWith(
+      deskLocation.uuid,
+      new Set(locations.map((location) => location.uuid)),
+    );
+  });
+
+  it('refetches referrals for the newly selected location', () => {
+    fireEvent.click(
+      screen.getByLabelText('Location', {
+        selector: 'button',
+      }),
+    );
+    fireEvent.click(
+      screen.getByText(locations[1].display, {
+        selector: 'div',
+      }),
+    );
+    expect(mockedGetReferrals).toHaveBeenLastCalledWith(expect.objectContaining({ locationUuid: locations[1].uuid }));
   });
 
   it('filters by statuses, with dropdown inferred from data', () => {
