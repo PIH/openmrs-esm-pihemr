@@ -19,12 +19,13 @@ export const configSchema = {
     _default: 10,
     _validators: [validators.inRange(1, 100)],
   },
-  patientChartUrl: {
+  patientDashboardUrl: {
     _type: Type.String,
     _description:
-      'The URL of the patient chart to link to from the audit trail. May contain the ' +
-      'template variables ${openmrsSpaBase}, ${openmrsBase} and ${patientUuid}.',
-    _default: '${openmrsSpaBase}/patient/${patientUuid}/chart',
+      "The dashboard the patient's name in the encounter audit links to. This is the OpenMRS 2.x " +
+      'clinician dashboard rather than a page in this app, so it is a full page load. May contain ' +
+      'the template variables ${openmrsBase}, ${openmrsSpaBase} and ${patientUuid}.',
+    _default: '${openmrsBase}/pihcore/router/programDashboard.page?patientId=${patientUuid}',
     _validators: [validators.isUrlWithTemplateParameters(['patientUuid'])],
   },
 };
@@ -32,5 +33,5 @@ export const configSchema = {
 export interface Config {
   patientSearchPageSize: number;
   encountersPageSize: number;
-  patientChartUrl: string;
+  patientDashboardUrl: string;
 }

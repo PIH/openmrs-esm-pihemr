@@ -72,12 +72,16 @@ export default function EncounterAudit({ encounterUuid, onBackToEncounters }: En
     );
   }
 
+  /**
+   * Where the back button goes when the trail was entered by linking straight to an encounter, and
+   * what the patient's name links out to.
+   */
   const patientUuid = encounter.patient?.uuid;
   const summaryRows: Array<SummaryRow> = [
     {
       label: t('patient', 'Patient'),
       value: patientUuid ? (
-        <ConfigurableLink to={config.patientChartUrl} templateParams={{ patientUuid }}>
+        <ConfigurableLink to={config.patientDashboardUrl} templateParams={{ patientUuid }}>
           {encounter.patient?.display}
         </ConfigurableLink>
       ) : (

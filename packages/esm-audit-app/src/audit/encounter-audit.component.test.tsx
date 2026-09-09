@@ -115,7 +115,9 @@ function obsRowsFor(conceptName: string): Array<HTMLElement> {
 
 describe('<EncounterAudit />', () => {
   beforeEach(() => {
-    mockUseConfig.mockReturnValue({ patientChartUrl: '${openmrsSpaBase}/patient/${patientUuid}/chart' });
+    mockUseConfig.mockReturnValue({
+      patientDashboardUrl: '${openmrsBase}/pihcore/router/programDashboard.page?patientId=${patientUuid}',
+    });
     mockRestApi();
   });
 
@@ -123,10 +125,7 @@ describe('<EncounterAudit />', () => {
     renderEncounterAudit();
 
     expect(await screen.findByText('CDI Klinik Ekstèn Jeneral')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Y2AHXV - Dave TestPatient' })).toHaveAttribute(
-      'href',
-      '/openmrs/spa/patient/patient-1/chart',
-    );
+    expect(screen.getByText('Y2AHXV - Dave TestPatient')).toBeInTheDocument();
     expect(screen.getByText('Y2AHXV')).toBeInTheDocument();
     expect(screen.getByText('COVID19 Admission v1.0')).toBeInTheDocument();
     expect(screen.getByText('Clinic or Hospital Visit')).toBeInTheDocument();
@@ -229,6 +228,17 @@ describe('<EncounterAudit />', () => {
 
     expect(await screen.findByText(/this encounter has been deleted/i)).toBeInTheDocument();
     expect(screen.getByText('Entered on the wrong patient')).toBeInTheDocument();
+  });
+
+  /**
+   * The OpenMRS 2.x clinician dashboard is outside this app, so this is a full page load rather
+   * than a route within the SPA.
+   */
+  it("links the patient's name at the legacy clinician dashboard", async () => {
+    renderEncounterAudit();
+
+    const link = await screen.findByRole('link', { name: 'Y2AHXV - Dave TestPatient' });
+    expect(link).toHaveAttribute('href', '/openmrs/pihcore/router/programDashboard.page?patientId=patient-1');
   });
 
   it('walks back up to the patient the encounter belongs to', async () => {
