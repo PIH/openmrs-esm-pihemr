@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import {
   type FetchResponse,
@@ -7,7 +7,17 @@ import {
   useOpenmrsFetchAll,
   useOpenmrsPagination,
 } from '@openmrs/esm-framework';
-import { type AuditEncounter, type AuditObs, type AuditPatient, type ObsTreeNode, type PagedResponse } from '../types';
+import {
+  type AuditEncounter,
+  type AuditObs,
+  type AuditPatient,
+  type AuditProvider,
+  type AuditUser,
+  type ObsTreeNode,
+  type OpenmrsResourceRef,
+  type PagedResponse,
+} from '../types';
+import { buildAuditDateQuery, type DateRange } from './date-range';
 import {
   buildEncounterFilterQuery,
   distinctEncounterTypes,
@@ -16,6 +26,17 @@ import {
 } from './encounter-filters';
 import { buildObsTree } from './obs-audit';
 import { buildAuditEvents, type ObsByEncounter, summariseByUser } from './patient-activity';
+import {
+  type AuditAction,
+  canDiscoverMore,
+  countUserObs,
+  discoverEncounters,
+  emptyStream,
+  filterByEncounterType,
+  type ObsStream,
+  streamToExtend,
+  type UserEncounterActivity,
+} from './user-encounters';
 
 const patientRep =
   'custom:(uuid,display,identifiers:(uuid,identifier,preferred,identifierType:(uuid,display))' +
@@ -50,6 +71,34 @@ const obsRep =
 /** A stable identity, so the unfiltered reads do not rebuild their memos on every render. */
 const noFilters: EncounterFilters = {};
 
+const userRep = 'custom:(uuid,display,username,systemId,retired,person:(uuid,display))';
+
+/**
+ * The pihcore audit endpoint, which searches observations by the user who created or voided them —
+ * something the core REST API cannot do, since neither the obs resource nor core's own
+ * `ObsSearchCriteria` has a creator or voidedBy field.
+ */
+const obsAuditUrl = `${restBaseUrl}/pihcore/obsaudit`;
+
+/**
+ * The whole encounter rather than a reference, so the observations a user touched can be grouped
+ * into encounters and listed without a further request per encounter.
+ */
+const obsAuditRep =
+  'custom:(uuid,voided,obsDatetime,concept:(uuid,display),auditInfo' +
+  ',encounter:(uuid,display,encounterDatetime,voided,encounterType:(uuid,display)' +
+  ',form:(uuid,display),location:(uuid,display),patient:(uuid,display)))';
+
+const providerRep = 'custom:(uuid,display,identifier,retired,person:(uuid,display,gender))';
+
+/**
+ * A provider's encounters span patients, so the list names the patient and who entered it —
+ * `encounterListRep` carries only the patient's uuid, which is all a single patient's list needs.
+ */
+const providerEncounterRep =
+  'custom:(uuid,display,encounterDatetime,voided,patient:(uuid,display),encounterType:(uuid,display)' +
+  ',form:(uuid,display),location:(uuid,display),auditInfo)';
+
 /** Just enough of an obs to say who touched it and when. */
 const activityObsRep = 'custom:(uuid,voided,concept:(uuid,display),previousVersion:(uuid),auditInfo)';
 
@@ -68,25 +117,46 @@ const bulkPageSize = 100;
 const maxBulkPages = 25;
 
 /**
- * Reads every page of a paginated REST endpoint imperatively.
- *
- * `useOpenmrsFetchAll` covers this wherever the url is known at render time. The activity scan is
- * the exception: it reads the observations of many encounters, and a hook cannot be called once
- * per encounter, so that one loop needs a plain function.
+ * A last-resort ceiling for a read that is meant to be exhaustive, so that a paging bug on either
+ * side cannot spin forever. It sits far above any real audit trail; reaching it means something is
+ * wrong, which is why it warns and is reported rather than silently truncating.
  */
-async function fetchAllPages<T>(url: string): Promise<Array<T>> {
+const runawayRowLimit = 100000;
+
+interface FetchAllPagesOptions {
+  /** Stop after this many rows. Defaults to a bound suited to one encounter's observations. */
+  maxRows?: number;
+  /** Called with the running total after each page, for reads long enough to be worth reporting. */
+  onProgress?: (rowsRead: number) => void;
+}
+
+/**
+ * Reads the pages of a paginated REST endpoint imperatively.
+ *
+ * `useOpenmrsFetchAll` covers this wherever one url is known at render time. Two callers cannot use
+ * it: the activity scan reads the observations of many encounters, and a hook cannot be called once
+ * per encounter; and the user audit scan needs to report its progress as it goes.
+ */
+async function fetchAllPages<T>(url: string, options: FetchAllPagesOptions = {}): Promise<Array<T>> {
   const results: Array<T> = [];
   const separator = url.includes('?') ? '&' : '?';
+  const rowLimit = options.maxRows ?? maxBulkPages * bulkPageSize;
 
-  for (let page = 0; page < maxBulkPages; page++) {
+  while (results.length < rowLimit) {
+    const pageSize = Math.min(bulkPageSize, rowLimit - results.length);
     const response = await openmrsFetch<PagedResponse<T>>(
-      `${url}${separator}startIndex=${page * bulkPageSize}&limit=${bulkPageSize}`,
+      `${url}${separator}startIndex=${results.length}&limit=${pageSize}`,
     );
     const batch = response?.data?.results ?? [];
     results.push(...batch);
-    if (batch.length < bulkPageSize) {
+    options.onProgress?.(results.length);
+    if (batch.length < pageSize) {
       break;
     }
+  }
+
+  if (results.length >= runawayRowLimit) {
+    console.warn(`Stopped reading ${url} after ${runawayRowLimit} rows; results are incomplete.`);
   }
 
   return results;
@@ -214,6 +284,25 @@ export function useAllPatientEncounters(
     error: includeDeleted ? bulkResult.error : scanResult.error,
     isLoading: includeDeleted ? bulkResult.isLoading : scanResult.isLoading,
   };
+}
+
+/**
+ * Every encounter type in the system, for a filter that cannot be narrowed to what a particular
+ * search contains. The user drill-down needs this because it discovers encounters lazily and so
+ * does not know which types a trail holds until it has read all of it. Retired types are left out.
+ */
+export function useAllEncounterTypes() {
+  const { data, error, isLoading } = useOpenmrsFetchAll<OpenmrsResourceRef>(
+    `${restBaseUrl}/encountertype?v=custom:(uuid,display)&limit=${bulkPageSize}`,
+    restFetchOptions,
+  );
+
+  const encounterTypes = useMemo(
+    () => (data ?? []).slice().sort((a, b) => (a.display ?? '').localeCompare(b.display ?? '')),
+    [data],
+  );
+
+  return { encounterTypes, error, isLoading };
 }
 
 /**
@@ -405,5 +494,291 @@ export function usePatientActivity(
     scanProgress: { read: encountersRead, total: encounterUuids.length },
     error: encountersError ?? obsResult.error,
     isLoading: isLoadingEncounters || obsResult.isLoading,
+  };
+}
+
+/** Searches providers by name or identifier, one page at a time. */
+export function useProviderSearch(query: string, page: number, pageSize: number) {
+  const startIndex = (page - 1) * pageSize;
+  const url = query
+    ? `${restBaseUrl}/provider?q=${encodeURIComponent(query)}&v=${providerRep}` +
+      `&startIndex=${startIndex}&limit=${pageSize}&totalCount=true`
+    : null;
+
+  const { data, error, isLoading } = useSWR<FetchResponse<PagedResponse<AuditProvider>>>(url, openmrsFetch);
+
+  return {
+    providers: data?.data?.results ?? [],
+    totalCount: data?.data?.totalCount ?? data?.data?.results?.length ?? 0,
+    error,
+    isLoading,
+  };
+}
+
+export function useAuditProvider(providerUuid: string | null) {
+  const url = providerUuid ? `${restBaseUrl}/provider/${providerUuid}?v=${providerRep}` : null;
+  const { data, error, isLoading } = useSWR<FetchResponse<AuditProvider>>(url, openmrsFetch);
+
+  return { provider: data?.data, error, isLoading };
+}
+
+/**
+ * The encounters a provider is recorded on, newest first, a page at a time.
+ *
+ * Core cannot search encounters by provider: `EncounterSearchCriteria` carries a providers field
+ * but no search handler exposes it, and the free-text encounter search only matches patient name
+ * and identifier. The pihcore audit endpoint can, and it returns whole encounters including
+ * `auditInfo`, so one paged request per page is the whole cost — no second read per row, and no
+ * FHIR detour.
+ */
+export function useProviderEncounters(providerUuid: string | null, pageSize: number, filters: EncounterFilters) {
+  const filterQuery =
+    (filters.encounterType ? `&encounterType=${filters.encounterType.uuid}` : '') + buildAuditDateQuery(filters);
+  const url = providerUuid
+    ? `${restBaseUrl}/pihcore/encounteraudit?provider=${providerUuid}&v=${providerEncounterRep}${filterQuery}`
+    : null;
+  // `useOpenmrsPagination` appends limit, startIndex and totalCount itself, so the url omits them.
+  const result = useOpenmrsPagination<AuditEncounter>(url as string, pageSize, restFetchOptions);
+
+  /**
+   * Both filters narrow on the server, so a change makes the pages a different set. The hook keeps
+   * its own page number, so paging has to be sent back to the start or a filter applied on page
+   * three would ask for a page that may no longer exist.
+   */
+  useEffect(() => {
+    if (result.currentPage !== 1) {
+      result.goTo(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterQuery, providerUuid]);
+
+  return {
+    encounters: result.data ?? [],
+    // The hook reports NaN until the first page has been read.
+    totalCount: Number.isNaN(result.totalCount) ? 0 : result.totalCount,
+    currentPage: result.currentPage,
+    goTo: result.goTo,
+    error: result.error,
+    isLoading: result.isLoading,
+  };
+}
+
+/** Searches user accounts by username, system id, or the person's name, one page at a time. */
+export function useUserSearch(query: string, page: number, pageSize: number) {
+  const startIndex = (page - 1) * pageSize;
+  const url = query
+    ? `${restBaseUrl}/user?q=${encodeURIComponent(query)}&v=${userRep}` +
+      `&startIndex=${startIndex}&limit=${pageSize}&totalCount=true`
+    : null;
+
+  const { data, error, isLoading } = useSWR<FetchResponse<PagedResponse<AuditUser>>>(url, openmrsFetch);
+
+  return {
+    users: data?.data?.results ?? [],
+    totalCount: data?.data?.totalCount ?? data?.data?.results?.length ?? 0,
+    error,
+    isLoading,
+  };
+}
+
+export function useAuditUser(userUuid: string | null) {
+  const url = userUuid ? `${restBaseUrl}/user/${userUuid}?v=${userRep}` : null;
+  const { data, error, isLoading } = useSWR<FetchResponse<AuditUser>>(url, openmrsFetch);
+
+  return { user: data?.data, error, isLoading };
+}
+
+/** Observations read per request while walking the audit searches. */
+const auditScanPageSize = 100;
+
+/**
+ * A safety ceiling on how many requests one page of encounters may cost, so that a pathological
+ * trail — thousands of observations all on a handful of encounters — cannot spin indefinitely.
+ */
+const maxScanRequestsPerPage = 40;
+
+/** Reads the next page of one of the two audit searches and folds it into that stream. */
+async function extendStream(baseUrl: string, stream: ObsStream): Promise<ObsStream> {
+  const response = await openmrsFetch<PagedResponse<AuditObs>>(
+    `${baseUrl}&startIndex=${stream.obs.length}&limit=${auditScanPageSize}`,
+  );
+  const batch = response?.data?.results ?? [];
+  return { obs: [...stream.obs, ...batch], exhausted: batch.length < auditScanPageSize };
+}
+
+/**
+ * The encounters whose observations a given user recorded or deleted, most recently changed first,
+ * discovered a page at a time.
+ *
+ * `createdBy` and `voidedBy` narrow rather than widen on the audit endpoint, so "touched" means
+ * merging two searches. Neither is read to the end: both return observations by audit date
+ * descending, so the merge yields encounters in the order the list wants them, and reading stops as
+ * soon as enough encounters are certain to fill the page being viewed. Paging further reads further,
+ * and paging back costs nothing, since what has been read is kept.
+ *
+ * A date range is handed to both searches, which bound it against their own audit column, so a
+ * range narrows the trail on the server rather than after it has been read.
+ *
+ * See `discoverEncounters` for why partial reads still give a stable order, and `countUserObs` for
+ * how the per-encounter counts are made exact for the rows on screen.
+ */
+export function useUserEncounters(
+  userUuid: string | null,
+  pageSize: number,
+  dateRange: DateRange,
+  encounterTypeUuid?: string,
+): {
+  activity: Array<UserEncounterActivity>;
+  currentPage: number;
+  goTo(page: number): void;
+  firstRowOnPage: number;
+  hasNextPage: boolean;
+  obsRead: number;
+  /** True when the scan gave up before the trail ran out, so more may match than is shown. */
+  stoppedEarly: boolean;
+  /**
+   * True while the trail is still being read behind a list that already has rows in it — which a
+   * filter makes common, since matching rows trickle in as more of the trail is read.
+   */
+  isDiscovering: boolean;
+  error: unknown;
+  isLoading: boolean;
+} {
+  const [page, setPage] = useState(1);
+  const [created, setCreated] = useState<ObsStream>(emptyStream);
+  const [voided, setVoided] = useState<ObsStream>(emptyStream);
+  const [isScanning, setIsScanning] = useState(false);
+  const [stoppedEarly, setStoppedEarly] = useState(false);
+  const [error, setError] = useState<unknown>(undefined);
+
+  const dateQuery = buildAuditDateQuery(dateRange);
+
+  /**
+   * Identifies the search the streams belong to — the account and the range both, since changing
+   * either changes which observations exist — so a scan that was in flight when it changed cannot
+   * append its rows to the results of a different search.
+   */
+  const scanToken = useRef<string | null>(null);
+  const searchKey = userUuid ? `${userUuid}${dateQuery}` : null;
+
+  useEffect(() => {
+    scanToken.current = searchKey;
+    setPage(1);
+    setCreated(emptyStream);
+    setVoided(emptyStream);
+    setStoppedEarly(false);
+    setError(undefined);
+  }, [searchKey]);
+
+  /**
+   * The type filter is applied here rather than by the server, so changing it does not invalidate
+   * what has been read — only which page of it is being looked at, and possibly how much more of
+   * the trail has to be read to fill that page.
+   */
+  useEffect(() => {
+    setPage(1);
+  }, [encounterTypeUuid]);
+
+  const discovered = useMemo(
+    () => filterByEncounterType(discoverEncounters(created, voided), encounterTypeUuid),
+    [created, encounterTypeUuid, voided],
+  );
+  const needed = page * pageSize;
+  // One more than the page needs, so that whether a next page exists is known without reading a
+  // whole further page of encounters.
+  const wanted = needed + 1;
+
+  useEffect(() => {
+    const token = searchKey;
+    if (!userUuid || !token || discovered.length >= wanted || !canDiscoverMore(created, voided)) {
+      return;
+    }
+
+    let cancelled = false;
+    const baseUrl = `${obsAuditUrl}?v=${obsAuditRep}${dateQuery}`;
+
+    (async () => {
+      setIsScanning(true);
+      try {
+        let nextCreated = created;
+        let nextVoided = voided;
+        for (let request = 0; request < maxScanRequestsPerPage; request++) {
+          const action = streamToExtend(nextCreated, nextVoided);
+          if (!action) {
+            break;
+          }
+          if (action === 'created') {
+            nextCreated = await extendStream(`${baseUrl}&createdBy=${userUuid}`, nextCreated);
+          } else {
+            nextVoided = await extendStream(`${baseUrl}&voidedBy=${userUuid}`, nextVoided);
+          }
+          if (cancelled || scanToken.current !== token) {
+            return;
+          }
+          if (filterByEncounterType(discoverEncounters(nextCreated, nextVoided), encounterTypeUuid).length >= wanted) {
+            break;
+          }
+        }
+        setCreated(nextCreated);
+        setVoided(nextVoided);
+        // Whether it ran out of trail or out of patience is the difference between an empty result
+        // that means "nothing more" and one that means "not found yet".
+        setStoppedEarly(
+          canDiscoverMore(nextCreated, nextVoided) &&
+            filterByEncounterType(discoverEncounters(nextCreated, nextVoided), encounterTypeUuid).length < wanted,
+        );
+      } catch (e) {
+        setError(e);
+      } finally {
+        if (!cancelled) {
+          setIsScanning(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // `created` and `voided` are the accumulators this effect appends to; re-running on them is how
+    // it continues a scan that needed more than one round.
+  }, [created, voided, dateQuery, discovered.length, encounterTypeUuid, searchKey, userUuid, wanted]);
+
+  const firstRowOnPage = (page - 1) * pageSize;
+  const pageRows = useMemo(
+    () => discovered.slice(firstRowOnPage, firstRowOnPage + pageSize),
+    [discovered, firstRowOnPage, pageSize],
+  );
+
+  // Exact counts for the rows on screen only: one small read per encounter, not per audit trail.
+  const countsResult = useSWR<Record<string, { obsCreated: number; obsVoided: number }>>(
+    userUuid && pageRows.length ? ['audit-user-obs-counts', userUuid, pageRows.map((row) => row.encounter.uuid)] : null,
+    async () => {
+      const uuids = pageRows.map((row) => row.encounter.uuid);
+      const counted = await mapWithConcurrency(uuids, scanConcurrency, async (encounterUuid) => {
+        const obs = await fetchAllPages<AuditObs>(
+          `${restBaseUrl}/obs?encounter=${encounterUuid}&includeAll=true&v=custom:(uuid,voided,auditInfo)`,
+        );
+        return countUserObs(obs, userUuid);
+      });
+      return Object.fromEntries(uuids.map((encounterUuid, index) => [encounterUuid, counted[index]]));
+    },
+  );
+
+  const activity = useMemo(
+    () => pageRows.map((row) => ({ ...row, ...countsResult.data?.[row.encounter.uuid] })),
+    [countsResult.data, pageRows],
+  );
+
+  return {
+    activity,
+    currentPage: page,
+    goTo: setPage,
+    firstRowOnPage,
+    hasNextPage: discovered.length > needed,
+    obsRead: created.obs.length + voided.obs.length,
+    stoppedEarly,
+    isDiscovering: isScanning && pageRows.length > 0,
+    error: error ?? countsResult.error,
+    isLoading: (isScanning && pageRows.length === 0) || (pageRows.length > 0 && countsResult.isLoading),
   };
 }

@@ -2,12 +2,11 @@ import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SWRConfig } from 'swr';
-import { openmrsFetch, useConfig } from '@openmrs/esm-framework';
+import { openmrsFetch } from '@openmrs/esm-framework';
 import { type AuditEncounter, type AuditPatient } from '../types';
 import PatientRecord from './patient-record.component';
 
 const mockOpenmrsFetch = jest.mocked(openmrsFetch);
-const mockUseConfig = jest.mocked(useConfig);
 
 const mockPatient: AuditPatient = {
   uuid: 'patient-1',
@@ -93,9 +92,6 @@ function renderPatientRecord() {
 
 describe('<PatientRecord />', () => {
   beforeEach(() => {
-    mockUseConfig.mockReturnValue({
-      patientChartUrl: '${openmrsSpaBase}/patient/${patientUuid}/chart',
-    });
     mockRestApi();
   });
 

@@ -2,25 +2,33 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, ComboBox } from '@carbon/react';
 import { OpenmrsDateRangePicker } from '@openmrs/esm-framework';
-import { type AuditPatient, type OpenmrsResourceRef } from '../types';
-import { usePatientEncounterTypes } from './audit.resource';
-import { type EncounterFilters, fromDateKey, hasActiveFilters, toDateKey } from './encounter-filters';
+import { type OpenmrsResourceRef } from '../types';
+import { fromDateKey, toDateKey } from './date-range';
+import { type EncounterFilters, hasActiveFilters } from './encounter-filters';
 import styles from './audit.scss';
 
 interface EncounterFiltersBarProps {
-  patient: AuditPatient | undefined;
-  includeDeleted: boolean;
+  /**
+   * The types to offer. Supplied rather than fetched, because the right set depends on the list
+   * being filtered: a patient's own types where they can be known, every type in the system where
+   * they cannot.
+   */
+  encounterTypes: Array<OpenmrsResourceRef>;
+  isLoadingTypes: boolean;
   filters: EncounterFilters;
   onChange(filters: EncounterFilters): void;
 }
 
 /**
- * Narrows a patient's encounter list by encounter type and by the date the encounter happened.
- * The types on offer are the ones this patient's encounters actually use.
+ * Narrows an encounter list by encounter type and by the date the encounter happened.
  */
-export default function EncounterFiltersBar({ patient, includeDeleted, filters, onChange }: EncounterFiltersBarProps) {
+export default function EncounterFiltersBar({
+  encounterTypes,
+  isLoadingTypes,
+  filters,
+  onChange,
+}: EncounterFiltersBarProps) {
   const { t } = useTranslation();
-  const { encounterTypes, isLoading } = usePatientEncounterTypes(patient, includeDeleted);
 
   const today = useMemo(() => new Date(), []);
 
@@ -45,7 +53,7 @@ export default function EncounterFiltersBar({ patient, includeDeleted, filters, 
     <div className={styles.filters}>
       <ComboBox
         className={styles.filterControl}
-        disabled={isLoading || items.length === 0}
+        disabled={isLoadingTypes || items.length === 0}
         id="encounter-type-filter"
         items={items}
         itemToString={(encounterType: OpenmrsResourceRef | null) => encounterType?.display ?? ''}
@@ -59,6 +67,7 @@ export default function EncounterFiltersBar({ patient, includeDeleted, filters, 
       />
       <OpenmrsDateRangePicker
         className={styles.filterControl}
+        id="encounter-date-range-filter"
         labelText={t('encounterDateRange', 'Encounter date range')}
         maxDate={today}
         onChange={([from, to]) => onChange({ ...filters, fromDate: toDateKey(from), toDate: toDateKey(to) })}

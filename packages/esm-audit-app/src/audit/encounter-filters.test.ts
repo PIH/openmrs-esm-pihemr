@@ -1,11 +1,10 @@
 import { type AuditEncounter } from '../types';
+import { fromDateKey, toDateKey } from './date-range';
 import {
   buildEncounterFilterQuery,
   distinctEncounterTypes,
-  fromDateKey,
   hasActiveFilters,
   matchesEncounterFilters,
-  toDateKey,
 } from './encounter-filters';
 
 const consultationType = { uuid: 'type-consultation', display: 'Oncology Consultation' };

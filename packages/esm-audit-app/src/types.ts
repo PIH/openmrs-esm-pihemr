@@ -49,6 +49,35 @@ export interface AuditPatient {
   };
 }
 
+/**
+ * A user account, as returned by the REST user search. `display` is the username (or system id),
+ * while the person's real name lives on `person`.
+ */
+export interface AuditUser {
+  uuid: string;
+  display?: string;
+  username?: string;
+  systemId?: string;
+  retired?: boolean;
+  person?: {
+    uuid?: string;
+    display?: string;
+  };
+}
+
+/** A provider, as returned by the REST provider search. */
+export interface AuditProvider {
+  uuid: string;
+  display?: string;
+  identifier?: string;
+  retired?: boolean;
+  person?: {
+    uuid?: string;
+    display?: string;
+    gender?: string;
+  };
+}
+
 export interface EncounterProvider {
   uuid: string;
   voided?: boolean;
@@ -92,6 +121,11 @@ export interface AuditObs {
   concept?: OpenmrsResourceRef & { descriptions?: Array<ConceptDescription> };
   /** Set when this obs is a member of an obs group. */
   obsGroup?: OpenmrsResourceRef;
+  /**
+   * A reference by default, but the audit endpoint is asked for the whole encounter so that the
+   * observations a user touched can be grouped into the encounters they belong to.
+   */
+  encounter?: OpenmrsResourceRef | AuditEncounter;
   /** Set when this obs replaced an earlier one, i.e. when the value was edited. */
   previousVersion?: OpenmrsResourceRef;
   auditInfo?: AuditInfo;

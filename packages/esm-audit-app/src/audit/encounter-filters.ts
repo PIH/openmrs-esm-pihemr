@@ -1,19 +1,18 @@
 import { type AuditEncounter, type OpenmrsResourceRef } from '../types';
+import { type DateRange, toDateKey } from './date-range';
 
 /**
  * The filters an auditor can narrow a patient's encounter list by. Dates are held as calendar
  * dates (`YYYY-MM-DD`) rather than instants, because that is what someone picking a date means,
  * and both bounds are inclusive.
  */
-export interface EncounterFilters {
+export interface EncounterFilters extends DateRange {
   /**
    * The whole reference rather than just the uuid, so that the chosen type stays displayable even
    * if it drops out of the available options — which happens when deleted encounters are hidden
    * again and the type only occurred on those.
    */
   encounterType?: OpenmrsResourceRef;
-  fromDate?: string;
-  toDate?: string;
 }
 
 /**
@@ -29,30 +28,6 @@ export function distinctEncounterTypes(encounters: Array<AuditEncounter>): Array
     }
   }
   return Array.from(byUuid.values()).sort((a, b) => (a.display ?? '').localeCompare(b.display ?? ''));
-}
-
-function pad(value: number): string {
-  return String(value).padStart(2, '0');
-}
-
-/** The calendar date a `Date` falls on, in the browser's time zone. */
-export function toDateKey(date: Date | null | undefined): string | undefined {
-  if (!date || Number.isNaN(date.getTime())) {
-    return undefined;
-  }
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-/** Local midnight on a calendar date, for handing a stored filter back to the date picker. */
-export function fromDateKey(key: string | undefined): Date | null {
-  if (!key) {
-    return null;
-  }
-  const [year, month, day] = key.split('-').map(Number);
-  if (!year || !month || !day) {
-    return null;
-  }
-  return new Date(year, month - 1, day);
 }
 
 export function hasActiveFilters(filters: EncounterFilters): boolean {
