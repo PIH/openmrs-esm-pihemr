@@ -113,4 +113,4 @@ for information about how to provide configuration files.
 | ----------------------- | -------------------------------------------------- | -------------------------------------------------- |
 | `patientSearchPageSize` | `10`                                               | Patients per page of search results.               |
 | `encountersPageSize`    | `10`                                               | Encounters per page of a patient's encounter list.  |
-| `patientChartUrl`       | `${openmrsSpaBase}/patient/${patientUuid}/chart`   | Where the patient's name in the encounter audit links to. |
+| `patientDashboardUrl`   | `${openmrsBase}/pihcore/router/programDashboard.page?patientId=${patientUuid}` | Where the patient's name in the encounter audit links to. Points at the OpenMRS 2.x clinician dashboard, so it is a full page load. |
