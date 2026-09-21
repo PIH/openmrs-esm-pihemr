@@ -32,7 +32,7 @@ interface UserEncountersProps {
 /**
  * The encounters whose observations a user recorded or deleted, as a way into each one's audit
  * trail. Unlike the provider list, this really is "what did this account change" — it is built from
- * the pihcore audit endpoint, which searches observations by their creator and voiding user.
+ * the pihapps audit endpoint, which searches observations by their creator and voiding user.
  */
 export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSearch }: UserEncountersProps) {
   const { t } = useTranslation();

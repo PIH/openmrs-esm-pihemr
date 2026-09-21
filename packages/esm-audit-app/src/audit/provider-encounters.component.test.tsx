@@ -17,7 +17,7 @@ const provider = {
 };
 
 /**
- * What the pihcore audit endpoint answers: whole encounters, paged, including the auditInfo that
+ * What the pihapps audit endpoint answers: whole encounters, paged, including the auditInfo that
  * names who entered each one. No second read per row, and no FHIR.
  */
 const encounters: Array<AuditEncounter> = [
@@ -50,7 +50,7 @@ function mockRestApi({ results = encounters } = {}) {
     if (url.includes('/encountertype')) {
       return Promise.resolve({ data: { results: encounterTypes } }) as ReturnType<typeof openmrsFetch>;
     }
-    if (url.includes('/pihcore/encounteraudit')) {
+    if (url.includes('/pihapps/encounteraudit')) {
       return Promise.resolve({ data: { results, totalCount: results.length } }) as ReturnType<typeof openmrsFetch>;
     }
     return Promise.resolve({ data: provider }) as ReturnType<typeof openmrsFetch>;
@@ -85,11 +85,11 @@ describe('<ProviderEncounters />', () => {
     return decodeURIComponent(urls[urls.length - 1] ?? '');
   }
 
-  it('asks the pihcore audit endpoint which encounters name the provider', async () => {
+  it('asks the pihapps audit endpoint which encounters name the provider', async () => {
     renderProviderEncounters();
 
     await screen.findByRole('cell', { name: 'Oncology Consultation' });
-    expect(auditSearchUrl()).toContain('/ws/rest/v1/pihcore/encounteraudit?provider=prov-1');
+    expect(auditSearchUrl()).toContain('/ws/rest/v1/pihapps/encounteraudit?provider=prov-1');
     expect(auditSearchUrl()).toContain('&limit=10&startIndex=0&totalCount=true');
   });
 

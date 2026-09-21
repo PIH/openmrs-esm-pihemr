@@ -74,11 +74,11 @@ const noFilters: EncounterFilters = {};
 const userRep = 'custom:(uuid,display,username,systemId,retired,person:(uuid,display))';
 
 /**
- * The pihcore audit endpoint, which searches observations by the user who created or voided them —
+ * The pihapps audit endpoint, which searches observations by the user who created or voided them —
  * something the core REST API cannot do, since neither the obs resource nor core's own
  * `ObsSearchCriteria` has a creator or voidedBy field.
  */
-const obsAuditUrl = `${restBaseUrl}/pihcore/obsaudit`;
+const obsAuditUrl = `${restBaseUrl}/pihapps/obsaudit`;
 
 /**
  * The whole encounter rather than a reference, so the observations a user touched can be grouped
@@ -527,7 +527,7 @@ export function useAuditProvider(providerUuid: string | null) {
  *
  * Core cannot search encounters by provider: `EncounterSearchCriteria` carries a providers field
  * but no search handler exposes it, and the free-text encounter search only matches patient name
- * and identifier. The pihcore audit endpoint can, and it returns whole encounters including
+ * and identifier. The pihapps audit endpoint can, and it returns whole encounters including
  * `auditInfo`, so one paged request per page is the whole cost — no second read per row, and no
  * FHIR detour.
  */
@@ -535,7 +535,7 @@ export function useProviderEncounters(providerUuid: string | null, pageSize: num
   const filterQuery =
     (filters.encounterType ? `&encounterType=${filters.encounterType.uuid}` : '') + buildAuditDateQuery(filters);
   const url = providerUuid
-    ? `${restBaseUrl}/pihcore/encounteraudit?provider=${providerUuid}&v=${providerEncounterRep}${filterQuery}`
+    ? `${restBaseUrl}/pihapps/encounteraudit?provider=${providerUuid}&v=${providerEncounterRep}${filterQuery}`
     : null;
   // `useOpenmrsPagination` appends limit, startIndex and totalCount itself, so the url omits them.
   const result = useOpenmrsPagination<AuditEncounter>(url as string, pageSize, restFetchOptions);

@@ -39,7 +39,7 @@ describe('buildAuditDateQuery', () => {
   });
 
   /**
-   * Bare dates on purpose: the pihcore endpoint reads a date-only endDate as the whole of that day,
+   * Bare dates on purpose: the pihapps endpoint reads a date-only endDate as the whole of that day,
    * so spelling out a time would only risk disagreeing with it.
    */
   it('sends the range as plain calendar dates', () => {

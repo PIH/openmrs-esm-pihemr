@@ -121,7 +121,7 @@ describe('<UserEncounters />', () => {
     mockRestApi();
   });
 
-  it('asks the pihcore audit endpoint what the user created and what they voided', async () => {
+  it('asks the pihapps audit endpoint what the user created and what they voided', async () => {
     renderUserEncounters();
 
     await screen.findByText('Encounters 1–10');

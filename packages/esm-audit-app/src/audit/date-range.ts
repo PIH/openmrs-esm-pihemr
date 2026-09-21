@@ -36,7 +36,7 @@ export function hasDateRange(range: DateRange): boolean {
 }
 
 /**
- * The date parameters the pihcore audit endpoints understand — the same names on both, which is why
+ * The date parameters the pihapps audit endpoints understand — the same names on both, which is why
  * this is not specific to either.
  *
  * Bare dates are sent deliberately: those endpoints read a date-only `endDate` as the whole of that
