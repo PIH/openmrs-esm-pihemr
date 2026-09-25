@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Checkbox, InlineNotification, Tab, TabList, TabPanel, TabPanels, Tabs } from '@carbon/react';
 import { ArrowLeftIcon, ErrorState } from '@openmrs/esm-framework';
-import { canListDeletedEncounters, getPreferredIdentifier, useAuditPatient } from './audit.resource';
+import {
+  canListDeletedEncounters,
+  getPreferredIdentifier,
+  useAuditPatient,
+  usePatientEncounterTypes,
+} from './audit.resource';
 import { type EncounterFilters } from './encounter-filters';
 import EncounterFiltersBar from './encounter-filters.component';
 import PatientActivity from './patient-activity.component';
@@ -38,6 +43,7 @@ export default function PatientRecord({
   const [filters, setFilters] = useState<EncounterFilters>({});
 
   const { patient, error: patientError, isLoading: isLoadingPatient } = useAuditPatient(patientUuid);
+  const { encounterTypes, isLoading: isLoadingTypes } = usePatientEncounterTypes(patient, includeDeleted);
   const cannotIncludeDeleted = includeDeleted && Boolean(patient) && !canListDeletedEncounters(patient);
 
   return (
@@ -54,7 +60,12 @@ export default function PatientRecord({
         </span>
       </div>
 
-      <EncounterFiltersBar filters={filters} includeDeleted={includeDeleted} onChange={setFilters} patient={patient} />
+      <EncounterFiltersBar
+        encounterTypes={encounterTypes}
+        filters={filters}
+        isLoadingTypes={isLoadingTypes}
+        onChange={setFilters}
+      />
 
       <div className={styles.toolbar}>
         <Checkbox

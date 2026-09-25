@@ -1,26 +1,34 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, ComboBox } from '@carbon/react';
 import { OpenmrsDateRangePicker } from '@openmrs/esm-framework';
-import { type AuditPatient, type OpenmrsResourceRef } from '../types';
-import { usePatientEncounterTypes } from './audit.resource';
-import { type EncounterFilters, fromDateKey, hasActiveFilters, toDateKey } from './encounter-filters';
+import { type OpenmrsResourceRef } from '../types';
+import { fromPickerRange, toPickerDefault } from './date-range';
+import { type EncounterFilters, hasActiveFilters } from './encounter-filters';
 import styles from './audit.scss';
 
 interface EncounterFiltersBarProps {
-  patient: AuditPatient | undefined;
-  includeDeleted: boolean;
+  /**
+   * The types to offer. Supplied rather than fetched, because the right set depends on the list
+   * being filtered: a patient's own types where they can be known, every type in the system where
+   * they cannot.
+   */
+  encounterTypes: Array<OpenmrsResourceRef>;
+  isLoadingTypes: boolean;
   filters: EncounterFilters;
   onChange(filters: EncounterFilters): void;
 }
 
 /**
- * Narrows a patient's encounter list by encounter type and by the date the encounter happened.
- * The types on offer are the ones this patient's encounters actually use.
+ * Narrows an encounter list by encounter type and by the date the encounter happened.
  */
-export default function EncounterFiltersBar({ patient, includeDeleted, filters, onChange }: EncounterFiltersBarProps) {
+export default function EncounterFiltersBar({
+  encounterTypes,
+  isLoadingTypes,
+  filters,
+  onChange,
+}: EncounterFiltersBarProps) {
   const { t } = useTranslation();
-  const { encounterTypes, isLoading } = usePatientEncounterTypes(patient, includeDeleted);
 
   const today = useMemo(() => new Date(), []);
 
@@ -36,16 +44,14 @@ export default function EncounterFiltersBar({ patient, includeDeleted, filters, 
     return encounterTypes;
   }, [encounterTypes, filters.encounterType]);
 
-  const dateRange = useMemo<[Date | null, Date | null]>(
-    () => [fromDateKey(filters.fromDate), fromDateKey(filters.toDate)],
-    [filters.fromDate, filters.toDate],
-  );
+  // bumped to clear the range picker, which has to be left to hold its own value
+  const [datePickerKey, setDatePickerKey] = useState(0);
 
   return (
     <div className={styles.filters}>
       <ComboBox
         className={styles.filterControl}
-        disabled={isLoading || items.length === 0}
+        disabled={isLoadingTypes || items.length === 0}
         id="encounter-type-filter"
         items={items}
         itemToString={(encounterType: OpenmrsResourceRef | null) => encounterType?.display ?? ''}
@@ -59,14 +65,30 @@ export default function EncounterFiltersBar({ patient, includeDeleted, filters, 
       />
       <OpenmrsDateRangePicker
         className={styles.filterControl}
+        defaultValue={toPickerDefault(filters)}
+        id="encounter-date-range-filter"
         labelText={t('encounterDateRange', 'Encounter date range')}
         maxDate={today}
-        onChange={([from, to]) => onChange({ ...filters, fromDate: toDateKey(from), toDate: toDateKey(to) })}
+        onChangeRaw={(range) => {
+          const { fromDate, toDate } = fromPickerRange(range);
+          // the picker reports on keystrokes that leave the range as it was, and a new filters object
+          // would send the list back to its first page for nothing
+          if (fromDate !== filters.fromDate || toDate !== filters.toDate) {
+            onChange({ ...filters, fromDate, toDate });
+          }
+        }}
+        key={datePickerKey}
         size="sm"
-        value={dateRange}
       />
       {hasActiveFilters(filters) ? (
-        <Button className={styles.clearFilters} kind="ghost" onClick={() => onChange({})} size="sm">
+        <Button
+          className={styles.clearFilters}
+          kind="ghost"
+          onClick={() => {
+            setDatePickerKey((key) => key + 1);
+            onChange({});
+          }}
+          size="sm">
           {t('clearFilters', 'Clear filters')}
         </Button>
       ) : null}
