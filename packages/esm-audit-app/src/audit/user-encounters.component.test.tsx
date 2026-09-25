@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { SWRConfig } from 'swr';
 import { openmrsFetch, useConfig } from '@openmrs/esm-framework';
 import UserEncounters from './user-encounters.component';
+import { stubDateRangePicker } from './date-range-picker.test-stub';
 
 const mockOpenmrsFetch = jest.mocked(openmrsFetch);
 const mockUseConfig = jest.mocked(useConfig);
@@ -71,14 +72,14 @@ function limitOf(url: string): number {
  */
 function mockRestApi({ totalCreated = 250, obsPerEncounter = 20 } = {}) {
   mockOpenmrsFetch.mockImplementation((url: string) => {
-    if (url.includes('/obsaudit?') && url.includes('createdBy=')) {
+    if (url.includes('/pihapps/obs?') && url.includes('createdBy=')) {
       const start = startIndexOf(url);
       const count = Math.max(0, Math.min(limitOf(url), totalCreated - start));
       return Promise.resolve({
         data: { results: createdObsPage(start, count, obsPerEncounter) },
       }) as ReturnType<typeof openmrsFetch>;
     }
-    if (url.includes('/obsaudit?') && url.includes('voidedBy=')) {
+    if (url.includes('/pihapps/obs?') && url.includes('voidedBy=')) {
       return Promise.resolve({ data: { results: [] } }) as ReturnType<typeof openmrsFetch>;
     }
     if (url.includes('/encountertype')) {
@@ -108,7 +109,7 @@ function renderUserEncounters() {
 }
 
 function auditRequests() {
-  return mockOpenmrsFetch.mock.calls.map(([url]) => url as string).filter((url) => url.includes('/obsaudit?'));
+  return mockOpenmrsFetch.mock.calls.map(([url]) => url as string).filter((url) => url.includes('/pihapps/obs?'));
 }
 
 function dataRows() {
@@ -117,6 +118,7 @@ function dataRows() {
 
 describe('<UserEncounters />', () => {
   beforeEach(() => {
+    stubDateRangePicker();
     mockUseConfig.mockReturnValue({ encountersPageSize: 10 });
     mockRestApi();
   });
@@ -127,6 +129,34 @@ describe('<UserEncounters />', () => {
     await screen.findByText('Encounters 1–10');
     expect(auditRequests().some((url) => url.includes('createdBy=user-1'))).toBe(true);
     expect(auditRequests().some((url) => url.includes('voidedBy=user-1'))).toBe(true);
+  });
+
+  /**
+   * The endpoint leaves voided observations out unless asked, so an audit has to ask: without this
+   * the voidedBy stream would come back empty and nothing deleted would ever be listed.
+   */
+  it('asks for voided observations to be included', async () => {
+    renderUserEncounters();
+
+    await screen.findByText('Encounters 1–10');
+    expect(auditRequests().every((url) => url.includes('includeVoided=true'))).toBe(true);
+  });
+
+  /**
+   * The endpoint sorts nothing unless asked, and each stream wants the column belonging to the
+   * action it searched on — ordering both by the same one would bury what the other is about.
+   */
+  it('orders each stream by the audit action it searched on', async () => {
+    renderUserEncounters();
+
+    await screen.findByText('Encounters 1–10');
+    const created = auditRequests().filter((url) => url.includes('createdBy='));
+    const voided = auditRequests().filter((url) => url.includes('voidedBy='));
+
+    expect(created.length).toBeGreaterThan(0);
+    expect(voided.length).toBeGreaterThan(0);
+    expect(created.every((url) => url.includes('sortBy=dateCreated-desc&sortBy=obsId-desc'))).toBe(true);
+    expect(voided.every((url) => url.includes('sortBy=dateVoided-desc&sortBy=obsId-desc'))).toBe(true);
   });
 
   it('shows one page of encounters, most recently changed first', async () => {
@@ -200,10 +230,8 @@ describe('<UserEncounters />', () => {
   });
 
   /**
-   * The framework stubs its range picker as a text input that reports a range once it parses, so
-   * the filter can be driven the way a user would. Note that the stub parses with dayjs without the
-   * customParseFormat plugin, so despite its DD/MM/YYYY label the value is read as MM/DD/YYYY —
-   * hence the American-looking dates below. Real pickers hand the component Date objects.
+   * The range picker is stubbed as a text input read as MM/DD/YYYY–MM/DD/YYYY, which like the real
+   * one reports nothing until both ends of the range are complete.
    */
   const septemberRange = '09/01/2026–09/30/2026';
   it('narrows the search on the server when a date range is picked', async () => {
@@ -214,12 +242,28 @@ describe('<UserEncounters />', () => {
     await userEvent.type(screen.getByLabelText('Changed between'), septemberRange);
 
     await waitFor(() =>
-      expect(auditRequests().some((url) => url.includes('startDate=2026-09-01&endDate=2026-09-30'))).toBe(true),
+      expect(
+        auditRequests().some((url) => url.includes('createdOnOrAfter=2026-09-01&createdOnOrBefore=2026-09-30')),
+      ).toBe(true),
     );
-    // both halves of "touched" are bounded, not just the one
-    const bounded = auditRequests().filter((url) => url.includes('startDate=2026-09-01'));
-    expect(bounded.some((url) => url.includes('createdBy=user-1'))).toBe(true);
-    expect(bounded.some((url) => url.includes('voidedBy=user-1'))).toBe(true);
+    // both halves of "touched" are bounded, not just the one, and each against its own column
+    const created = auditRequests().filter((url) => url.includes('createdBy=user-1'));
+    const voided = auditRequests().filter((url) => url.includes('voidedBy=user-1'));
+    expect(created.some((url) => url.includes('createdOnOrAfter=2026-09-01&createdOnOrBefore=2026-09-30'))).toBe(true);
+    expect(voided.some((url) => url.includes('voidedOnOrAfter=2026-09-01&voidedOnOrBefore=2026-09-30'))).toBe(true);
+  });
+
+  it('keeps searching everything while only the start of a range has been typed', async () => {
+    renderUserEncounters();
+    await screen.findByText('Encounters 1–10');
+
+    await userEvent.type(screen.getByLabelText('Changed between'), '09/01/2026–');
+
+    expect(screen.getByText('Encounters 1–10')).toBeInTheDocument();
+    expect(auditRequests().some((url) => url.includes('createdOnOrAfter=') || url.includes('voidedOnOrAfter='))).toBe(
+      false,
+    );
+    expect(screen.queryByRole('button', { name: /clear filters/i })).not.toBeInTheDocument();
   });
 
   it('starts the trail over when the range changes, rather than mixing two searches', async () => {
@@ -235,9 +279,9 @@ describe('<UserEncounters />', () => {
     // back to the first page, and reading the bounded trail from its start
     expect(await screen.findByText('Encounters 1–10')).toBeInTheDocument();
     await waitFor(() =>
-      expect(auditRequests().some((url) => url.includes('startDate=2026-09-01') && url.includes('startIndex=0'))).toBe(
-        true,
-      ),
+      expect(
+        auditRequests().some((url) => url.includes('createdOnOrAfter=2026-09-01') && url.includes('startIndex=0')),
+      ).toBe(true),
     );
   });
 
@@ -317,7 +361,7 @@ describe('<UserEncounters />', () => {
       releaseTrail = resolve;
     });
     mockOpenmrsFetch.mockImplementation((url: string, ...rest) => {
-      if (gateArmed && url.includes('/obsaudit?')) {
+      if (gateArmed && url.includes('/pihapps/obs?')) {
         return gate.then(() => respondNormally(url, ...rest)) as ReturnType<typeof openmrsFetch>;
       }
       return respondNormally(url, ...rest);

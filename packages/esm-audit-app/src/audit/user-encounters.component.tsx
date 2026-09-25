@@ -19,7 +19,7 @@ import { ArrowLeftIcon, ErrorState, OpenmrsDateRangePicker, useConfig } from '@o
 import { type Config } from '../config-schema';
 import { type OpenmrsResourceRef } from '../types';
 import { formatAuditDatetime } from './audit-format';
-import { type DateRange, fromDateKey, hasDateRange, toDateKey } from './date-range';
+import { type DateRange, fromPickerRange, hasDateRange, toPickerDefault } from './date-range';
 import { useAllEncounterTypes, useAuditUser, useUserEncounters } from './audit.resource';
 import styles from './audit.scss';
 
@@ -39,6 +39,8 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
   const config = useConfig<Config>();
   const pageSize = config.encountersPageSize ?? 10;
   const [dateRange, setDateRange] = useState<DateRange>({});
+  // bumped to clear the range picker, which has to be left to hold its own value
+  const [datePickerKey, setDatePickerKey] = useState(0);
   const [encounterType, setEncounterType] = useState<OpenmrsResourceRef | null>(null);
   const today = new Date();
 
@@ -95,12 +97,13 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
         />
         <OpenmrsDateRangePicker
           className={styles.filterControl}
+          defaultValue={toPickerDefault(dateRange)}
           id="user-activity-date-range"
           labelText={t('changedBetween', 'Changed between')}
           maxDate={today}
-          onChange={([from, to]) => setDateRange({ fromDate: toDateKey(from), toDate: toDateKey(to) })}
+          onChangeRaw={(range) => setDateRange(fromPickerRange(range))}
+          key={datePickerKey}
           size="sm"
-          value={[fromDateKey(dateRange.fromDate), fromDateKey(dateRange.toDate)]}
         />
         {hasFilters ? (
           <Button
@@ -108,6 +111,7 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
             kind="ghost"
             onClick={() => {
               setDateRange({});
+              setDatePickerKey((key) => key + 1);
               setEncounterType(null);
             }}
             size="sm">

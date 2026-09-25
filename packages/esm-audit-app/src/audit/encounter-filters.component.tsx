@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, ComboBox } from '@carbon/react';
 import { OpenmrsDateRangePicker } from '@openmrs/esm-framework';
 import { type OpenmrsResourceRef } from '../types';
-import { fromDateKey, toDateKey } from './date-range';
+import { fromPickerRange, toPickerDefault } from './date-range';
 import { type EncounterFilters, hasActiveFilters } from './encounter-filters';
 import styles from './audit.scss';
 
@@ -44,10 +44,8 @@ export default function EncounterFiltersBar({
     return encounterTypes;
   }, [encounterTypes, filters.encounterType]);
 
-  const dateRange = useMemo<[Date | null, Date | null]>(
-    () => [fromDateKey(filters.fromDate), fromDateKey(filters.toDate)],
-    [filters.fromDate, filters.toDate],
-  );
+  // bumped to clear the range picker, which has to be left to hold its own value
+  const [datePickerKey, setDatePickerKey] = useState(0);
 
   return (
     <div className={styles.filters}>
@@ -67,15 +65,30 @@ export default function EncounterFiltersBar({
       />
       <OpenmrsDateRangePicker
         className={styles.filterControl}
+        defaultValue={toPickerDefault(filters)}
         id="encounter-date-range-filter"
         labelText={t('encounterDateRange', 'Encounter date range')}
         maxDate={today}
-        onChange={([from, to]) => onChange({ ...filters, fromDate: toDateKey(from), toDate: toDateKey(to) })}
+        onChangeRaw={(range) => {
+          const { fromDate, toDate } = fromPickerRange(range);
+          // the picker reports on keystrokes that leave the range as it was, and a new filters object
+          // would send the list back to its first page for nothing
+          if (fromDate !== filters.fromDate || toDate !== filters.toDate) {
+            onChange({ ...filters, fromDate, toDate });
+          }
+        }}
+        key={datePickerKey}
         size="sm"
-        value={dateRange}
       />
       {hasActiveFilters(filters) ? (
-        <Button className={styles.clearFilters} kind="ghost" onClick={() => onChange({})} size="sm">
+        <Button
+          className={styles.clearFilters}
+          kind="ghost"
+          onClick={() => {
+            setDatePickerKey((key) => key + 1);
+            onChange({});
+          }}
+          size="sm">
           {t('clearFilters', 'Clear filters')}
         </Button>
       ) : null}

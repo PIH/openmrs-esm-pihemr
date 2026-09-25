@@ -5,6 +5,7 @@ import { SWRConfig } from 'swr';
 import { openmrsFetch } from '@openmrs/esm-framework';
 import { type AuditEncounter, type AuditPatient } from '../types';
 import PatientRecord from './patient-record.component';
+import { stubDateRangePicker } from './date-range-picker.test-stub';
 
 const mockOpenmrsFetch = jest.mocked(openmrsFetch);
 
@@ -92,6 +93,7 @@ function renderPatientRecord() {
 
 describe('<PatientRecord />', () => {
   beforeEach(() => {
+    stubDateRangePicker();
     mockRestApi();
   });
 

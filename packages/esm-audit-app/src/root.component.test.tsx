@@ -24,7 +24,7 @@ describe('<Root />', () => {
           data: { uuid: 'patient-1', display: 'Y2AHXV - Dave TestPatient', person: { display: 'Dave TestPatient' } },
         }) as ReturnType<typeof openmrsFetch>;
       }
-      if (url.includes('/obsaudit?')) {
+      if (url.includes('/pihapps/obs?')) {
         return Promise.resolve({ data: { results: [] } }) as ReturnType<typeof openmrsFetch>;
       }
       if (url.includes('/user/user-1')) {
@@ -37,7 +37,7 @@ describe('<Root />', () => {
           data: { uuid: 'prov-1', display: 'MCPRPG - Louidor Jean paul', identifier: 'MCPRPG' },
         }) as ReturnType<typeof openmrsFetch>;
       }
-      if (url.includes('/encounteraudit')) {
+      if (url.includes('/pihapps/encounter?')) {
         return Promise.resolve({ data: { results: [], totalCount: 0 } }) as ReturnType<typeof openmrsFetch>;
       }
       if (url.includes('/encounter/enc-1')) {

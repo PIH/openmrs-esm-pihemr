@@ -5,6 +5,7 @@ import { SWRConfig } from 'swr';
 import { openmrsFetch, useConfig } from '@openmrs/esm-framework';
 import { type AuditEncounter } from '../types';
 import ProviderEncounters from './provider-encounters.component';
+import { stubDateRangePicker } from './date-range-picker.test-stub';
 
 const mockOpenmrsFetch = jest.mocked(openmrsFetch);
 const mockUseConfig = jest.mocked(useConfig);
@@ -50,7 +51,7 @@ function mockRestApi({ results = encounters } = {}) {
     if (url.includes('/encountertype')) {
       return Promise.resolve({ data: { results: encounterTypes } }) as ReturnType<typeof openmrsFetch>;
     }
-    if (url.includes('/pihapps/encounteraudit')) {
+    if (url.includes('/pihapps/encounter?')) {
       return Promise.resolve({ data: { results, totalCount: results.length } }) as ReturnType<typeof openmrsFetch>;
     }
     return Promise.resolve({ data: provider }) as ReturnType<typeof openmrsFetch>;
@@ -70,6 +71,7 @@ function renderProviderEncounters() {
 
 describe('<ProviderEncounters />', () => {
   beforeEach(() => {
+    stubDateRangePicker();
     mockUseConfig.mockReturnValue({ encountersPageSize: 10 });
     mockRestApi();
   });
@@ -81,7 +83,7 @@ describe('<ProviderEncounters />', () => {
   function auditSearchUrl() {
     const urls = mockOpenmrsFetch.mock.calls
       .map(([url]) => url as string)
-      .filter((url) => url.includes('/encounteraudit'));
+      .filter((url) => url.includes('/pihapps/encounter?'));
     return decodeURIComponent(urls[urls.length - 1] ?? '');
   }
 
@@ -89,8 +91,30 @@ describe('<ProviderEncounters />', () => {
     renderProviderEncounters();
 
     await screen.findByRole('cell', { name: 'Oncology Consultation' });
-    expect(auditSearchUrl()).toContain('/ws/rest/v1/pihapps/encounteraudit?provider=prov-1');
+    expect(auditSearchUrl()).toContain('/ws/rest/v1/pihapps/encounter?provider=prov-1');
     expect(auditSearchUrl()).toContain('&limit=10&startIndex=0&totalCount=true');
+  });
+
+  /**
+   * The endpoint leaves voided encounters out unless asked, so an audit has to ask: without this
+   * the table would quietly stop showing what had been deleted.
+   */
+  it('asks for voided encounters to be included', async () => {
+    renderProviderEncounters();
+
+    await screen.findByRole('cell', { name: 'Oncology Consultation' });
+    expect(auditSearchUrl()).toContain('includeVoided=true');
+  });
+
+  /**
+   * The endpoint sorts nothing unless asked, so a page without an ordering could repeat or skip
+   * rows. A provider search names no audit action, hence the encounter's own datetime.
+   */
+  it('asks for the ordering a provider search wants', async () => {
+    renderProviderEncounters();
+
+    await screen.findByRole('cell', { name: 'Oncology Consultation' });
+    expect(auditSearchUrl()).toContain('sortBy=encounterDatetime-desc&sortBy=encounterId-desc');
   });
 
   /**
@@ -101,7 +125,9 @@ describe('<ProviderEncounters />', () => {
     renderProviderEncounters();
 
     await screen.findByRole('cell', { name: 'Oncology Consultation' });
-    expect(mockOpenmrsFetch.mock.calls.filter(([url]) => (url as string).includes('/encounteraudit'))).toHaveLength(1);
+    expect(mockOpenmrsFetch.mock.calls.filter(([url]) => (url as string).includes('/pihapps/encounter?'))).toHaveLength(
+      1,
+    );
     expect(mockOpenmrsFetch.mock.calls.some(([url]) => (url as string).includes('/encounter/'))).toBe(false);
   });
 
@@ -143,11 +169,25 @@ describe('<ProviderEncounters />', () => {
     renderProviderEncounters();
     await screen.findByRole('cell', { name: 'Oncology Consultation' });
 
-    // the stubbed range picker parses its input as MM/DD/YYYY, hence the American-looking dates
+    // the stubbed range picker reads its input as MM/DD/YYYY, hence the American-looking dates
     await userEvent.clear(screen.getByLabelText('Encounter date range'));
     await userEvent.type(screen.getByLabelText('Encounter date range'), '04/01/2026–04/30/2026');
 
-    await waitFor(() => expect(auditSearchUrl()).toContain('startDate=2026-04-01&endDate=2026-04-30'));
+    await waitFor(() =>
+      expect(auditSearchUrl()).toContain(
+        'encounterDatetimeOnOrAfter=2026-04-01&encounterDatetimeOnOrBefore=2026-04-30',
+      ),
+    );
+  });
+
+  it('keeps the search unbounded while only the start of a range has been typed', async () => {
+    renderProviderEncounters();
+    await screen.findByRole('cell', { name: 'Oncology Consultation' });
+
+    await userEvent.type(screen.getByLabelText('Encounter date range'), '04/01/2026–');
+
+    expect(screen.getByRole('cell', { name: 'Oncology Consultation' })).toBeInTheDocument();
+    expect(auditSearchUrl()).not.toContain('encounterDatetimeOnOrAfter');
   });
 
   it('says so when nothing matches the filters', async () => {

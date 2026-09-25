@@ -17,7 +17,13 @@ import {
   type OpenmrsResourceRef,
   type PagedResponse,
 } from '../types';
-import { buildAuditDateQuery, type DateRange } from './date-range';
+import {
+  buildAuditDateQuery,
+  ENCOUNTER_DATE_PARAMS,
+  OBS_CREATED_DATE_PARAMS,
+  OBS_VOIDED_DATE_PARAMS,
+  type DateRange,
+} from './date-range';
 import {
   buildEncounterFilterQuery,
   distinctEncounterTypes,
@@ -78,7 +84,17 @@ const userRep = 'custom:(uuid,display,username,systemId,retired,person:(uuid,dis
  * something the core REST API cannot do, since neither the obs resource nor core's own
  * `ObsSearchCriteria` has a creator or voidedBy field.
  */
-const obsAuditUrl = `${restBaseUrl}/pihapps/obsaudit`;
+const obsAuditUrl = `${restBaseUrl}/pihapps/obs`;
+
+/**
+ * The ordering an obs audit stream asks for: the column belonging to the action it searched on,
+ * most recent first. Ordering by the observation's own datetime would bury an obs backdated to last
+ * year but entered this morning, which is the opposite of what an audit needs; `obsId` breaks ties
+ * so that paging cannot repeat or skip a row when several share a timestamp.
+ */
+function obsSortQuery(actionDate: 'dateCreated' | 'dateVoided'): string {
+  return `&sortBy=${actionDate}-desc&sortBy=obsId-desc`;
+}
 
 /**
  * The whole encounter rather than a reference, so the observations a user touched can be grouped
@@ -531,11 +547,22 @@ export function useAuditProvider(providerUuid: string | null) {
  * `auditInfo`, so one paged request per page is the whole cost — no second read per row, and no
  * FHIR detour.
  */
+const PROVIDER_ENCOUNTER_SORT = ['encounterDatetime-desc', 'encounterId-desc'];
+
 export function useProviderEncounters(providerUuid: string | null, pageSize: number, filters: EncounterFilters) {
   const filterQuery =
-    (filters.encounterType ? `&encounterType=${filters.encounterType.uuid}` : '') + buildAuditDateQuery(filters);
+    (filters.encounterType ? `&encounterType=${filters.encounterType.uuid}` : '') +
+    buildAuditDateQuery(filters, ENCOUNTER_DATE_PARAMS);
+  // `includeVoided=true` because this is an audit: the endpoint leaves voided encounters out unless
+  // asked, and an auditor wants to see what has since been deleted as much as what survives. The
+  // rows carry a `voided` flag so the table can mark them.
+  //
+  // The endpoint sorts nothing unless asked. A provider search names no audit action, so the most
+  // recent thing it is about is the encounter's own datetime; `encounterId` breaks ties so that
+  // paging cannot repeat or skip a row when several share a timestamp.
   const url = providerUuid
-    ? `${restBaseUrl}/pihapps/encounteraudit?provider=${providerUuid}&v=${providerEncounterRep}${filterQuery}`
+    ? `${restBaseUrl}/pihapps/encounter?provider=${providerUuid}&includeVoided=true` +
+      `&sortBy=${PROVIDER_ENCOUNTER_SORT.join('&sortBy=')}&v=${providerEncounterRep}${filterQuery}`
     : null;
   // `useOpenmrsPagination` appends limit, startIndex and totalCount itself, so the url omits them.
   const result = useOpenmrsPagination<AuditEncounter>(url as string, pageSize, restFetchOptions);
@@ -651,7 +678,9 @@ export function useUserEncounters(
   const [stoppedEarly, setStoppedEarly] = useState(false);
   const [error, setError] = useState<unknown>(undefined);
 
-  const dateQuery = buildAuditDateQuery(dateRange);
+  // The range identifies the search rather than forming part of a url: each stream now builds its
+  // own date query against the column it searched on.
+  const dateKey = `${dateRange.fromDate ?? ''}..${dateRange.toDate ?? ''}`;
 
   /**
    * Identifies the search the streams belong to — the account and the range both, since changing
@@ -659,7 +688,7 @@ export function useUserEncounters(
    * append its rows to the results of a different search.
    */
   const scanToken = useRef<string | null>(null);
-  const searchKey = userUuid ? `${userUuid}${dateQuery}` : null;
+  const searchKey = userUuid ? `${userUuid}${dateKey}` : null;
 
   useEffect(() => {
     scanToken.current = searchKey;
@@ -695,7 +724,14 @@ export function useUserEncounters(
     }
 
     let cancelled = false;
-    const baseUrl = `${obsAuditUrl}?v=${obsAuditRep}${dateQuery}`;
+    // `includeVoided=true` because this is an audit: the endpoint leaves voided observations out
+    // unless asked, and the voidedBy stream would come back empty without it. The rows carry a
+    // `voided` flag so what was deleted can be told from what survives.
+    //
+    // The ordering and the date range are per stream rather than on the base url: the endpoint
+    // sorts nothing unless asked and bounds no column unless told which, and each stream wants the
+    // column belonging to the action it searched on.
+    const baseUrl = `${obsAuditUrl}?includeVoided=true&v=${obsAuditRep}`;
 
     (async () => {
       setIsScanning(true);
@@ -708,9 +744,17 @@ export function useUserEncounters(
             break;
           }
           if (action === 'created') {
-            nextCreated = await extendStream(`${baseUrl}&createdBy=${userUuid}`, nextCreated);
+            nextCreated = await extendStream(
+              `${baseUrl}&createdBy=${userUuid}${obsSortQuery('dateCreated')}` +
+                buildAuditDateQuery(dateRange, OBS_CREATED_DATE_PARAMS),
+              nextCreated,
+            );
           } else {
-            nextVoided = await extendStream(`${baseUrl}&voidedBy=${userUuid}`, nextVoided);
+            nextVoided = await extendStream(
+              `${baseUrl}&voidedBy=${userUuid}${obsSortQuery('dateVoided')}` +
+                buildAuditDateQuery(dateRange, OBS_VOIDED_DATE_PARAMS),
+              nextVoided,
+            );
           }
           if (cancelled || scanToken.current !== token) {
             return;
@@ -741,7 +785,7 @@ export function useUserEncounters(
     };
     // `created` and `voided` are the accumulators this effect appends to; re-running on them is how
     // it continues a scan that needed more than one round.
-  }, [created, voided, dateQuery, discovered.length, encounterTypeUuid, searchKey, userUuid, wanted]);
+  }, [created, voided, dateKey, dateRange, discovered.length, encounterTypeUuid, searchKey, userUuid, wanted]);
 
   const firstRowOnPage = (page - 1) * pageSize;
   const pageRows = useMemo(
