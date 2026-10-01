@@ -187,7 +187,7 @@ describe('<UserEncounters />', () => {
     await screen.findByText('Encounters 1–10');
     const beforePaging = auditRequests().length;
 
-    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
 
     expect(await screen.findByText('Encounters 11–20')).toBeInTheDocument();
     expect(auditRequests().length).toBeGreaterThan(beforePaging);
@@ -198,11 +198,11 @@ describe('<UserEncounters />', () => {
     mockRestApi({ totalCreated: 5000, obsPerEncounter: 20 });
     renderUserEncounters();
     await screen.findByText('Encounters 1–10');
-    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
     await screen.findByText('Encounters 11–20');
     const afterPaging = auditRequests().length;
 
-    await userEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Previous page' }));
 
     expect(await screen.findByText('Encounters 1–10')).toBeInTheDocument();
     expect(auditRequests()).toHaveLength(afterPaging);
@@ -214,10 +214,10 @@ describe('<UserEncounters />', () => {
     renderUserEncounters();
 
     await screen.findByText('Encounters 1–10');
-    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
 
     expect(await screen.findByText('Encounters 11–12')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
   });
 
   it('counts each row’s observations exactly, from the encounter itself', async () => {
@@ -270,7 +270,7 @@ describe('<UserEncounters />', () => {
     mockRestApi({ totalCreated: 5000, obsPerEncounter: 20 });
     renderUserEncounters();
     await screen.findByText('Encounters 1–10');
-    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
     await screen.findByText('Encounters 11–20');
 
     await userEvent.clear(screen.getByLabelText('Changed between'));
