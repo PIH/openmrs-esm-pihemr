@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -6,6 +6,7 @@ import {
   DataTableSkeleton,
   InlineLoading,
   InlineNotification,
+  Pagination,
   Table,
   TableBody,
   TableCell,
@@ -20,7 +21,7 @@ import { type Config } from '../config-schema';
 import { type OpenmrsResourceRef } from '../types';
 import { formatAuditDatetime } from './audit-format';
 import { type DateRange, fromPickerRange, hasDateRange, toPickerDefault } from './date-range';
-import { useAllEncounterTypes, useAuditUser, useUserEncounters } from './audit.resource';
+import { useAuditUser, useUsedEncounterTypes, useUserEncounters } from './audit.resource';
 import styles from './audit.scss';
 
 interface UserEncountersProps {
@@ -37,7 +38,8 @@ interface UserEncountersProps {
 export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSearch }: UserEncountersProps) {
   const { t } = useTranslation();
   const config = useConfig<Config>();
-  const pageSize = config.encountersPageSize ?? 10;
+  const [pageSize, setPageSize] = useState(config.encountersPageSize ?? 10);
+  const pageSizes = useMemo(() => Array.from(new Set([pageSize, 10, 20, 50])).sort((a, b) => a - b), [pageSize]);
   const [dateRange, setDateRange] = useState<DateRange>({});
   // bumped to clear the range picker, which has to be left to hold its own value
   const [datePickerKey, setDatePickerKey] = useState(0);
@@ -45,7 +47,7 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
   const today = new Date();
 
   const { user, error: userError, isLoading: isLoadingUser } = useAuditUser(userUuid);
-  const { encounterTypes, isLoading: isLoadingTypes } = useAllEncounterTypes();
+  const { encounterTypes, isLoading: isLoadingTypes } = useUsedEncounterTypes();
   const {
     activity,
     currentPage,
@@ -78,7 +80,7 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
       */}
       <div className={styles.filters}>
         {/*
-          Every type in the system rather than only those this account has touched: encounters are
+          Every type in use rather than only those this account has touched: encounters are
           discovered lazily, so which types the trail holds is not known until all of it is read.
         */}
         <ComboBox
@@ -198,34 +200,38 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
             </Table>
           </TableContainer>
           {/*
-            How many encounters this account has touched cannot be known without reading its whole
-            trail, which is the very thing being avoided, so there is no total to page against.
-            A range and a next button say exactly what is known.
+            A filter is applied after the trail has been read, so matching rows arrive as the scan
+            goes on. Without this the list looks finished while it is still filling.
           */}
-          <div className={styles.lazyPagination}>
-            <span className={styles.paginationRange}>
-              {t('encounterRange', 'Encounters {{from}}–{{to}}', {
+          {isDiscovering ? (
+            <InlineLoading
+              className={styles.discovering}
+              description={t('lookingForMoreEncounters', 'Looking for more encounters…')}
+            />
+          ) : null}
+          {/*
+            How many encounters this account has touched cannot be known without reading its whole
+            trail, which is the very thing being avoided, so there is no total to page against: the
+            pager runs with its page count unknown and says only the range on screen.
+          */}
+          <Pagination
+            isLastPage={!hasNextPage}
+            itemText={() =>
+              t('encounterRange', 'Encounters {{from}}–{{to}}', {
                 from: firstRowOnPage + 1,
                 to: firstRowOnPage + activity.length,
-              })}
-            </span>
-            {/*
-              A filter is applied after the trail has been read, so matching rows arrive as the
-              scan goes on. Without this the list looks finished while it is still filling.
-            */}
-            {isDiscovering ? (
-              <InlineLoading
-                className={styles.discovering}
-                description={t('lookingForMoreEncounters', 'Looking for more encounters…')}
-              />
-            ) : null}
-            <Button disabled={currentPage === 1} kind="ghost" onClick={() => goTo(currentPage - 1)} size="sm">
-              {t('previousPage', 'Previous')}
-            </Button>
-            <Button disabled={!hasNextPage} kind="ghost" onClick={() => goTo(currentPage + 1)} size="sm">
-              {t('nextPage', 'Next')}
-            </Button>
-          </div>
+              })
+            }
+            onChange={({ page: nextPage, pageSize: nextPageSize }) => {
+              setPageSize(nextPageSize);
+              goTo(nextPage);
+            }}
+            page={currentPage}
+            pageSize={pageSize}
+            pageSizes={pageSizes}
+            pagesUnknown
+            size="sm"
+          />
         </>
       )}
     </div>

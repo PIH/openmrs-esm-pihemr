@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SWRConfig } from 'swr';
 import { openmrsFetch, useConfig } from '@openmrs/esm-framework';
@@ -41,15 +41,20 @@ const encounters: Array<AuditEncounter> = [
   },
 ];
 
-const encounterTypes = [
-  { uuid: 'type-2', display: 'Inscription' },
-  { uuid: 'type-1', display: 'Oncology Consultation' },
+const encounterTypeCounts = [
+  { encounterType: { uuid: 'type-2', display: 'Inscription' }, count: 12 },
+  { encounterType: { uuid: 'type-3', display: 'Never Recorded' }, count: 0 },
+  { encounterType: { uuid: 'type-1', display: 'Oncology Consultation' }, count: 30 },
 ];
 
 function mockRestApi({ results = encounters } = {}) {
   mockOpenmrsFetch.mockImplementation((url: string) => {
-    if (url.includes('/encountertype')) {
-      return Promise.resolve({ data: { results: encounterTypes } }) as ReturnType<typeof openmrsFetch>;
+    if (url.includes('/pihapps/encounterTypeCount')) {
+      // the endpoint leaves out unused types only when asked, so the mock does too
+      const results = url.includes('onlyUsed=true')
+        ? encounterTypeCounts.filter((entry) => entry.count > 0)
+        : encounterTypeCounts;
+      return Promise.resolve({ data: { results } }) as ReturnType<typeof openmrsFetch>;
     }
     if (url.includes('/pihapps/encounter?')) {
       return Promise.resolve({ data: { results, totalCount: results.length } }) as ReturnType<typeof openmrsFetch>;
@@ -151,6 +156,28 @@ describe('<ProviderEncounters />', () => {
     renderProviderEncounters();
 
     expect(await screen.findByText(/not the same as the ones they entered or changed/i)).toBeInTheDocument();
+  });
+
+  it('offers only the encounter types something has been recorded against', async () => {
+    renderProviderEncounters();
+    await screen.findByRole('cell', { name: 'Oncology Consultation' });
+
+    await userEvent.click(screen.getByRole('combobox', { name: /encounter type/i }));
+
+    const options = within(screen.getByRole('listbox')).getAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual(['Inscription', 'Oncology Consultation']);
+  });
+
+  it('counts deleted encounters towards their type, as the rest of the audit does', async () => {
+    renderProviderEncounters();
+    await screen.findByRole('cell', { name: 'Oncology Consultation' });
+
+    const countUrls = mockOpenmrsFetch.mock.calls
+      .map(([url]) => String(url))
+      .filter((url) => url.includes('/pihapps/encounterTypeCount'));
+    expect(countUrls.length).toBeGreaterThan(0);
+    expect(countUrls.every((url) => url.includes('includeVoided=true'))).toBe(true);
+    expect(countUrls.every((url) => url.includes('onlyUsed=true'))).toBe(true);
   });
 
   it('narrows the search on the server by encounter type', async () => {

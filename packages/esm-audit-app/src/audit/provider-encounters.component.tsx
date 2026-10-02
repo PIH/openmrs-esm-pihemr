@@ -17,7 +17,7 @@ import {
 import { ArrowLeftIcon, ErrorState, useConfig } from '@openmrs/esm-framework';
 import { type Config } from '../config-schema';
 import { formatAuditDatetime, formatUserAndDate } from './audit-format';
-import { useAllEncounterTypes, useAuditProvider, useProviderEncounters } from './audit.resource';
+import { useAuditProvider, useProviderEncounters, useUsedEncounterTypes } from './audit.resource';
 import { type EncounterFilters, hasActiveFilters } from './encounter-filters';
 import EncounterFiltersBar from './encounter-filters.component';
 import styles from './audit.scss';
@@ -47,7 +47,7 @@ export default function ProviderEncounters({
   const [filters, setFilters] = useState<EncounterFilters>({});
 
   const { provider, error: providerError, isLoading: isLoadingProvider } = useAuditProvider(providerUuid);
-  const { encounterTypes, isLoading: isLoadingTypes } = useAllEncounterTypes();
+  const { encounterTypes, isLoading: isLoadingTypes } = useUsedEncounterTypes();
   const { encounters, totalCount, currentPage, goTo, error, isLoading } = useProviderEncounters(
     providerUuid,
     pageSize,
@@ -66,7 +66,7 @@ export default function ProviderEncounters({
 
       {/*
         Both filters narrow on the server, so the page count and totals stay right — which is why
-        the encounter types come from the system-wide list rather than from what is on screen.
+        the encounter types come from those in use system-wide rather than from what is on screen.
       */}
       <EncounterFiltersBar
         encounterTypes={encounterTypes}
