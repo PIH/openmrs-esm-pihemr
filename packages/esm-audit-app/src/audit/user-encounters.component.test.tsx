@@ -30,8 +30,11 @@ function dayFromIndex(index: number): string {
 const consultationType = { uuid: 'type-consultation', display: 'Consultation' };
 const vitalsType = { uuid: 'type-vitals', display: 'Vitals' };
 
-/** A type nothing in the trail uses, since the dropdown offers every type in the system. */
+/** A type nothing in the trail uses, since the dropdown offers every type in use in the system. */
 const unusedType = { uuid: 'type-unused', display: 'Zibra Admission' };
+
+/** A type nothing in the system has been recorded against, which the dropdown leaves out. */
+const neverRecordedType = { uuid: 'type-never', display: 'Never Recorded' };
 
 function encounter(index: number) {
   return {
@@ -82,11 +85,17 @@ function mockRestApi({ totalCreated = 250, obsPerEncounter = 20 } = {}) {
     if (url.includes('/pihapps/obs?') && url.includes('voidedBy=')) {
       return Promise.resolve({ data: { results: [] } }) as ReturnType<typeof openmrsFetch>;
     }
-    if (url.includes('/encountertype')) {
-      // deliberately unsorted, and including a type the trail does not use
-      return Promise.resolve({
-        data: { results: [vitalsType, unusedType, consultationType] },
-      }) as ReturnType<typeof openmrsFetch>;
+    if (url.includes('/pihapps/encounterTypeCount')) {
+      // deliberately unsorted, and including a type the trail does not use and one nothing uses
+      const counts = [
+        { encounterType: vitalsType, count: 40 },
+        { encounterType: neverRecordedType, count: 0 },
+        { encounterType: unusedType, count: 3 },
+        { encounterType: consultationType, count: 40 },
+      ];
+      // the endpoint leaves out unused types only when asked, so the mock does too
+      const results = url.includes('onlyUsed=true') ? counts.filter((entry) => entry.count > 0) : counts;
+      return Promise.resolve({ data: { results } }) as ReturnType<typeof openmrsFetch>;
     }
     if (url.includes('/obs?encounter=')) {
       return Promise.resolve({
@@ -300,7 +309,7 @@ describe('<UserEncounters />', () => {
     expect(screen.queryByRole('button', { name: /clear filters/i })).not.toBeInTheDocument();
   });
 
-  it('offers every encounter type in the system, not just the ones in the trail', async () => {
+  it('offers every encounter type in use in the system, not just the ones in the trail', async () => {
     renderUserEncounters();
     await screen.findByText('Encounters 1–10');
 

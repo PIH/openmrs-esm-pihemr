@@ -21,7 +21,7 @@ import { type Config } from '../config-schema';
 import { type OpenmrsResourceRef } from '../types';
 import { formatAuditDatetime } from './audit-format';
 import { type DateRange, fromPickerRange, hasDateRange, toPickerDefault } from './date-range';
-import { useAllEncounterTypes, useAuditUser, useUserEncounters } from './audit.resource';
+import { useAuditUser, useUsedEncounterTypes, useUserEncounters } from './audit.resource';
 import styles from './audit.scss';
 
 interface UserEncountersProps {
@@ -47,7 +47,7 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
   const today = new Date();
 
   const { user, error: userError, isLoading: isLoadingUser } = useAuditUser(userUuid);
-  const { encounterTypes, isLoading: isLoadingTypes } = useAllEncounterTypes();
+  const { encounterTypes, isLoading: isLoadingTypes } = useUsedEncounterTypes();
   const {
     activity,
     currentPage,
@@ -80,7 +80,7 @@ export default function UserEncounters({ userUuid, onSelectEncounter, onBackToSe
       */}
       <div className={styles.filters}>
         {/*
-          Every type in the system rather than only those this account has touched: encounters are
+          Every type in use rather than only those this account has touched: encounters are
           discovered lazily, so which types the trail holds is not known until all of it is read.
         */}
         <ComboBox

@@ -302,19 +302,35 @@ export function useAllPatientEncounters(
   };
 }
 
+/** One entry of the pihapps encounter type count endpoint. */
+interface EncounterTypeCount {
+  encounterType: OpenmrsResourceRef;
+  count: number;
+}
+
 /**
- * Every encounter type in the system, for a filter that cannot be narrowed to what a particular
- * search contains. The user drill-down needs this because it discovers encounters lazily and so
- * does not know which types a trail holds until it has read all of it. Retired types are left out.
+ * The encounter types this implementation actually records against, for a filter that cannot be
+ * narrowed to what a particular search contains. The user and provider drill-downs need this
+ * because they discover encounters lazily or page them on the server, and so do not know which
+ * types a trail holds until all of it is read.
+ *
+ * Every type in the system would be mostly noise, since which ones are in use varies a great deal
+ * by country, so the types come from pihapps' count endpoint, which is asked to leave out those
+ * with no encounters. Deleted encounters count, as they do everywhere else in an audit: a type whose
+ * encounters have all been deleted still has a trail to look at. Retired types are kept for the
+ * same reason, since encounters recorded before a type was retired can still be audited.
  */
-export function useAllEncounterTypes() {
-  const { data, error, isLoading } = useOpenmrsFetchAll<OpenmrsResourceRef>(
-    `${restBaseUrl}/encountertype?v=custom:(uuid,display)&limit=${bulkPageSize}`,
-    restFetchOptions,
+export function useUsedEncounterTypes() {
+  const { data, error, isLoading } = useSWR<FetchResponse<{ results: Array<EncounterTypeCount> }>>(
+    `${restBaseUrl}/pihapps/encounterTypeCount?includeVoided=true&onlyUsed=true&v=custom:(uuid,display)`,
+    openmrsFetch,
   );
 
   const encounterTypes = useMemo(
-    () => (data ?? []).slice().sort((a, b) => (a.display ?? '').localeCompare(b.display ?? '')),
+    () =>
+      (data?.data?.results ?? [])
+        .map((entry) => entry.encounterType)
+        .sort((a, b) => (a.display ?? '').localeCompare(b.display ?? '')),
     [data],
   );
 
