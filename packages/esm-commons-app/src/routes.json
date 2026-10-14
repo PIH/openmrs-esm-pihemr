@@ -35,9 +35,20 @@
       "slot": "medication-dispense-action-slot"
     },
     {
+      "name": "prescription-label-print-action",
+      "component": "prescriptionLabelPrintAction",
+      "slot": "prescription-actions-footer-slot"
+    },
+    {
       "name": "inborn-outborn-tag",
       "component": "inbornOutbornTag",
       "slot": "maternal-ward-patient-card-header-slot"
+    }
+  ],
+  "modals": [
+    {
+      "name": "prescription-label-print-modal",
+      "component": "prescriptionLabelPrintModal"
     }
   ],
   "workspaces2": [

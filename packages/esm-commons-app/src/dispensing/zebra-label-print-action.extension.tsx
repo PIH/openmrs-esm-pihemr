@@ -4,7 +4,7 @@ import { Printer } from '@carbon/react/icons';
 import { useTranslation } from 'react-i18next';
 import { showSnackbar, useConfig } from '@openmrs/esm-framework';
 import { type ConfigObject } from '../config-schema';
-import { printDispenseLabelToZebra } from './zebra-label-print.resource';
+import { printDispenseLabelsToZebra } from './zebra-label-print.resource';
 
 // Minimal interface — mirrors the relevant fields from the dispensing app's MedicationDispense type
 // without introducing a hard dependency on that module.
@@ -32,13 +32,13 @@ const ZebraLabelPrintAction: React.FC<ZebraLabelPrintActionProps> = ({ medicatio
 
   const handlePrint = () => {
     setIsPrinting(true);
-    printDispenseLabelToZebra(
-      medicationDispense.id,
-      config.reportDefinitionUuid,
-      config.reportDesignUuid,
-      config.printMethod,
-      config.browserPrintFeatureKey,
-    )
+    printDispenseLabelsToZebra({
+      dispenseUuids: [medicationDispense.id],
+      reportDefinitionUuid: config.reportDefinitionUuid,
+      reportDesignUuid: config.reportDesignUuid,
+      printMethod: config.printMethod,
+      browserPrintFeatureKey: config.browserPrintFeatureKey,
+    })
       .then(() => {
         showSnackbar({
           kind: 'success',

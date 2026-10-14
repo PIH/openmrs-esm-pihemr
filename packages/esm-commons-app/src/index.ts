@@ -52,6 +52,16 @@ export const zebraLabelPrintAction = getAsyncLifecycle(
   { featureName: 'zebraLabelPrintAction', moduleName },
 );
 
+export const prescriptionLabelPrintAction = getAsyncLifecycle(
+  () => import('./dispensing/prescription-label-print-action.extension'),
+  { featureName: 'prescriptionLabelPrintAction', moduleName },
+);
+
+export const prescriptionLabelPrintModal = getAsyncLifecycle(
+  () => import('./dispensing/prescription-label-print.modal'),
+  { featureName: 'prescriptionLabelPrintModal', moduleName },
+);
+
 export const inbornOutbornTag = getAsyncLifecycle(() => import('./ward-app/inborn-outborn-tag-row.extension'), {
   featureName: 'inbornOutbornTag',
   moduleName,

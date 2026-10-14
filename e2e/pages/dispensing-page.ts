@@ -12,6 +12,14 @@ export class DispensingPage {
   readonly allPrescriptionsTab = () => this.page.getByRole('tab', { name: 'All prescriptions' });
   readonly prescriptionSearchBox = () => this.page.getByRole('searchbox', { name: 'Search by patient ID or name' });
 
+  // ── Prescription details / print labels ───────────────────────────────────
+  readonly printLabelsButton = () => this.page.getByRole('button', { name: 'Print labels' });
+  readonly printPrescriptionsButton = () => this.page.getByRole('button', { name: 'Print prescriptions' });
+  readonly printLabelsModalHeading = () => this.page.getByRole('heading', { name: 'Print labels' });
+  readonly bagLabelCheckbox = () => this.page.getByRole('checkbox', { name: 'Bag label' });
+  readonly labelCheckbox = (drugName: string | RegExp) => this.page.getByRole('checkbox', { name: drugName });
+  readonly modalPrintButton = () => this.page.getByRole('button', { name: 'Print', exact: true });
+
   patientSearchResult(patientIdentifier: string) {
     // Patient result cards render as role="banner" (i.e. <header>) in the search results panel
     return this.page.getByRole('banner').filter({ hasText: patientIdentifier });
@@ -83,6 +91,23 @@ export class DispensingPage {
     return test.step(`When I change the location selection filter to include "${locationName}"`, async () => {
       await this.page.getByRole('combobox').filter({ hasText: 'Filter by locations' }).click();
       await this.page.getByRole('option', { name: locationName }).click();
+    });
+  }
+
+  @step
+  async expandPrescriptionRow(patientName: string) {
+    return test.step(`When I expand the prescription row for ${patientName}`, async () => {
+      await this.prescriptionRow(patientName)
+        .getByRole('button', { name: /expand current row/i })
+        .click();
+    });
+  }
+
+  @step
+  async openPrintLabelsModal() {
+    return test.step('When I click Print labels', async () => {
+      await this.printLabelsButton().click();
+      await this.printLabelsModalHeading().waitFor({ state: 'visible' });
     });
   }
 

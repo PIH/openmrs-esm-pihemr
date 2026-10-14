@@ -1,9 +1,17 @@
 {
+  "bagLabel": "Etiqueta de bolsa",
+  "cancel": "Cancelar",
   "labelSentToPrinter": "Etiqueta enviada a la impresora",
+  "labelsSentToPrinter": "Etiquetas enviadas a la impresora",
+  "notDispensed": "No dispensado",
   "patientVisitSummary": "Patient visit summary",
+  "print": "Imprimir",
+  "printing": "Imprimiendo…",
   "printLabel": "Imprimir etiqueta",
   "printLabelFailed": "Error al imprimir la etiqueta",
-  "printing": "Imprimiendo…",
+  "printLabels": "Imprimir etiquetas",
+  "printLabelsFailed": "Error al imprimir las etiquetas",
+  "selectLabelsToPrint": "Seleccione las etiquetas que desea imprimir",
   "success": "Éxito",
   "unknownError": "Se produjo un error desconocido",
   "visitSummary": "Resumen de la visita"
