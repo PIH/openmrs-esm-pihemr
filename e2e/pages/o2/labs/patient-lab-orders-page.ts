@@ -18,6 +18,10 @@ export class O2PatientLabOrdersPage {
   readonly ordersTable = () => this.page.locator('#orders-table');
   readonly addLabOrdersButton = () => this.page.getByRole('button', { name: 'Add Lab orders' });
 
+  // Specimen collection form, shown inline in place of the orders list
+  readonly ordersListSection = () => this.page.locator('#view-orders-section');
+  readonly specimenCollectionSection = () => this.page.locator('#edit-specimen-encounter-section');
+
   // Discontinue confirmation dialog
   readonly discontinueDialog = () => this.page.locator('#discontinue-order-dialog');
   readonly discontinueReasonField = () => this.page.locator('#discontinue-reason-field');
@@ -38,6 +42,11 @@ export class O2PatientLabOrdersPage {
   /** The cancel "X" -- an icon-font glyph inside an anchor, with no accessible name. */
   cancelOrderButton(labTestName: string) {
     return this.orderRow(labTestName).locator('span.order-actions-btn a');
+  }
+
+  /** A bare <i> icon with no accessible name beyond its `title`; only rendered at admission locations. */
+  collectSpecimenButton(labTestName: string) {
+    return this.orderRow(labTestName).locator('i.collect-specimen-action');
   }
 
   @step
@@ -111,4 +120,132 @@ export class O2PatientLabOrdersPage {
       await expect(this.cancelOrderButton(labTestName)).toHaveCount(0);
     });
   }
+
+  @step
+  async collectSpecimen(labTestName: string) {
+    await test.step(`When I collect the specimen for "${labTestName}"`, async () => {
+      await this.collectSpecimenButton(labTestName).click();
+      await expect(this.specimenCollectionSection()).toBeVisible();
+    });
+    return new O2PatientLabOrdersPage.SpecimenCollectionForm(this);
+  }
+
+  @step
+  async expectCollectSpecimenAction(labTestName: string, visible: boolean) {
+    return test.step(`Then "${labTestName}" should ${visible ? '' : 'not '}offer a collect specimen action`, async () => {
+      if (visible) {
+        await expect(this.collectSpecimenButton(labTestName)).toBeVisible();
+      } else {
+        await expect(this.collectSpecimenButton(labTestName)).toHaveCount(0);
+      }
+    });
+  }
+
+  @step
+  async expectCollectSpecimenActionTitle(labTestName: string, title: 'Collect specimen' | 'Edit specimen collection') {
+    return test.step(`Then the specimen action for "${labTestName}" should be titled "${title}"`, async () => {
+      await expect(this.collectSpecimenButton(labTestName)).toHaveAttribute('title', title);
+    });
+  }
+
+  @step
+  async expectCancelAction(labTestName: string, visible: boolean) {
+    return test.step(`Then "${labTestName}" should ${visible ? '' : 'not '}offer a cancel action`, async () => {
+      if (visible) {
+        await expect(this.cancelOrderButton(labTestName)).toBeVisible();
+      } else {
+        await expect(this.cancelOrderButton(labTestName)).toHaveCount(0);
+      }
+    });
+  }
+
+  /**
+   * Opens the specimen collection edit for an already collected order while the fetch of its
+   * encounter fails, and checks the page reports the error rather than leaving the user on a
+   * spinner with the orders list hidden.
+   */
+  @step
+  async expectSpecimenCollectionLoadFailure(labTestName: string) {
+    return test.step(`Then loading the specimen collection for "${labTestName}" should fail gracefully`, async () => {
+      await this.page.route('**/ws/rest/v1/encounterFulfillingOrders/**', (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{"error":{"message":"E2E forced failure"}}',
+        }),
+      );
+      try {
+        await this.collectSpecimenButton(labTestName).click();
+        await expect(this.page.getByText('Error loading specimen collection')).toBeVisible();
+        await this.expectBackOnOrdersList();
+      } finally {
+        await this.page.unroute('**/ws/rest/v1/encounterFulfillingOrders/**');
+      }
+    });
+  }
+
+  @step
+  async expectBackOnOrdersList() {
+    return test.step('Then I should be back on the lab orders list', async () => {
+      await expect(this.specimenCollectionSection()).toBeHidden();
+      await expect(this.ordersListSection()).toBeVisible();
+      await this.waitForOrdersTable();
+    });
+  }
+
+  static SpecimenCollectionForm = class SpecimenCollectionForm {
+    constructor(readonly labOrdersPage: O2PatientLabOrdersPage) {}
+
+    private readonly page = () => this.labOrdersPage.page;
+    private readonly section = () => this.page().locator('#specimen-encounter-section');
+
+    readonly labIdField = () => this.page().locator('#specimen-encounter-section-lab-id-input');
+    readonly saveButton = () => this.section().locator('button.confirm.action-button');
+    readonly cancelButton = () => this.section().locator('button.cancel.action-button');
+
+    @step
+    async waitUntilReady() {
+      await expect(this.section().locator('.form-content-section')).toBeVisible();
+      await expect(this.labIdField()).toBeVisible();
+    }
+
+    @step
+    async fillLabId(labId: string) {
+      return test.step(`When I enter the lab ID "${labId}"`, async () => {
+        await this.labIdField().fill(labId);
+      });
+    }
+
+    @step
+    async expectLabId(labId: string) {
+      return test.step(`Then the lab ID should be "${labId}"`, async () => {
+        await expect(this.labIdField()).toHaveValue(labId);
+      });
+    }
+
+    @step
+    async cancel() {
+      await test.step('When I cancel the specimen collection', async () => {
+        await this.cancelButton().click();
+        await expect(this.labOrdersPage.specimenCollectionSection()).toBeHidden();
+      });
+      return this.labOrdersPage;
+    }
+
+    @step
+    async save() {
+      await test.step('When I save the specimen collection', async () => {
+        // Wait for the orders table refresh that follows a successful save, so later steps never
+        // act on rows that are about to be re-rendered.
+        const ordersRefreshed = this.page().waitForResponse(
+          (response) =>
+            response.url().includes('/ws/rest/v1/pihapps/labOrder') && response.request().method() === 'GET',
+        );
+        await this.saveButton().click();
+        await expect(this.labOrdersPage.specimenCollectionSection()).toBeHidden();
+        await ordersRefreshed;
+      });
+      return this.labOrdersPage;
+    }
+  };
 }
