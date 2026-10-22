@@ -189,6 +189,57 @@ test.describe('Lab Orders', () => {
       await patientLabOrdersPage.expectBackOnOrdersList();
     });
 
+    test('Collect one specimen for multiple selected orders at an admission location', async ({
+      api,
+      page,
+      adultWoman,
+    }) => {
+      await changeLocation(api, KGHLocationsUuids['Antenatal Ward']);
+
+      const addLabOrdersPage = await O2AddLabOrdersPage.open(page, adultWoman);
+      await addLabOrdersPage.selectCategory('Haematology');
+      await addLabOrdersPage.selectLabTest(TEST_CBC_3_PART_DIFF);
+      await addLabOrdersPage.selectLabTest(TEST_CBC_5_PART_DIFF);
+      await addLabOrdersPage.selectLabTest(TEST_COAGULATION_PROFILE);
+      await addLabOrdersPage.expectDraftOrderCount(3);
+      await addLabOrdersPage.save();
+      await addLabOrdersPage.expectOrdersSaved();
+
+      const patientLabOrdersPage = await O2PatientLabOrdersPage.open(page, adultWoman);
+      await patientLabOrdersPage.expectSelectedOrderCount(0);
+
+      // Selecting orders shows the selection bar, and clearing it removes the selection
+      await patientLabOrdersPage.selectOrder(TEST_CBC_3_PART_DIFF);
+      await patientLabOrdersPage.selectOrder(TEST_COAGULATION_PROFILE);
+      await patientLabOrdersPage.expectSelectedOrderCount(2);
+      await patientLabOrdersPage.clearSelectedOrders();
+      await patientLabOrdersPage.expectSelectedOrderCount(0);
+
+      // Select two of the three orders and record one collection for both of them
+      await patientLabOrdersPage.selectOrder(TEST_CBC_3_PART_DIFF);
+      await patientLabOrdersPage.selectOrder(TEST_COAGULATION_PROFILE);
+      await patientLabOrdersPage.expectSelectedOrderCount(2);
+
+      const specimenCollectionForm = await patientLabOrdersPage.collectSelectedOrders();
+      await specimenCollectionForm.waitUntilReady();
+      await specimenCollectionForm.expectOrderSelected(TEST_CBC_3_PART_DIFF, true);
+      await specimenCollectionForm.expectOrderSelected(TEST_COAGULATION_PROFILE, true);
+      await specimenCollectionForm.expectOrderNotListed(TEST_CBC_5_PART_DIFF);
+      await specimenCollectionForm.fillLabId(`E2E Test ${Date.now()}`);
+      await specimenCollectionForm.save();
+      await patientLabOrdersPage.expectBackOnOrdersList();
+
+      await patientLabOrdersPage.expectOrderStatus(TEST_CBC_3_PART_DIFF, 'Collected');
+      await patientLabOrdersPage.expectOrderStatus(TEST_COAGULATION_PROFILE, 'Collected');
+      await patientLabOrdersPage.expectOrderStatus(TEST_CBC_5_PART_DIFF, 'Ordered');
+      await patientLabOrdersPage.expectSelectedOrderCount(0);
+
+      // Only orders that can still be collected can be selected
+      await patientLabOrdersPage.expectOrderSelectable(TEST_CBC_3_PART_DIFF, false);
+      await patientLabOrdersPage.expectOrderSelectable(TEST_COAGULATION_PROFILE, false);
+      await patientLabOrdersPage.expectOrderSelectable(TEST_CBC_5_PART_DIFF, true);
+    });
+
     test('Does not offer specimen collection at a non-admission location', async ({ page, adultWoman }) => {
       // The Laboratory location, set in beforeEach, is not tagged as an Admission Location
       const addLabOrdersPage = await O2AddLabOrdersPage.open(page, adultWoman);
@@ -201,6 +252,7 @@ test.describe('Lab Orders', () => {
       const patientLabOrdersPage = await O2PatientLabOrdersPage.open(page, adultWoman);
       await patientLabOrdersPage.expectOrderStatus(TEST_CBC_3_PART_DIFF, 'Ordered');
       await patientLabOrdersPage.expectCollectSpecimenAction(TEST_CBC_3_PART_DIFF, false);
+      await patientLabOrdersPage.expectOrderSelectable(TEST_CBC_3_PART_DIFF, false);
       await patientLabOrdersPage.expectCancelAction(TEST_CBC_3_PART_DIFF, true);
     });
 

@@ -28,15 +28,19 @@ export class O2PatientLabOrdersPage {
   readonly discontinueConfirmButton = () => this.discontinueDialog().locator('button.confirm');
   readonly discontinueCancelButton = () => this.discontinueDialog().locator('button.cancel');
 
-  /** Rows carry no attributes; the Lab Test column is the 3rd cell on this page. */
+  /**
+   * Rows carry no attributes. At admission locations a leading selection checkbox column shifts every
+   * other cell by one, so the Lab Test cell is found by its position from the end of the row (it is
+   * the 4th last, before ordered-by, status and actions) rather than from the start.
+   */
   orderRow(labTestName: string) {
     return this.ordersTable()
       .locator('tbody tr')
-      .filter({ has: this.page.locator('td:nth-child(3)', { hasText: labTestName }) });
+      .filter({ has: this.page.locator('td:nth-last-child(4)', { hasText: labTestName }) });
   }
 
   orderRowStatus(labTestName: string) {
-    return this.orderRow(labTestName).locator('td:nth-child(5)');
+    return this.orderRow(labTestName).locator('td:nth-last-child(2)');
   }
 
   /** The cancel "X" -- an icon-font glyph inside an anchor, with no accessible name. */
@@ -48,6 +52,16 @@ export class O2PatientLabOrdersPage {
   collectSpecimenButton(labTestName: string) {
     return this.orderRow(labTestName).locator('i.collect-specimen-action');
   }
+
+  /** Only rendered at admission locations, and only for orders that can still be collected. */
+  selectOrderCheckbox(labTestName: string) {
+    return this.orderRow(labTestName).locator('input.select-order-checkbox');
+  }
+
+  readonly selectedOrdersBar = () => this.page.locator('#selected-orders-bar');
+  readonly selectedOrdersCount = () => this.page.locator('#selected-orders-count');
+  readonly clearSelectedOrdersLink = () => this.page.locator('#clear-selected-orders');
+  readonly collectSelectedOrdersButton = () => this.page.locator('#collect-selected-orders');
 
   @step
   static async open(page: Page, patient: Patient) {
@@ -131,6 +145,49 @@ export class O2PatientLabOrdersPage {
   }
 
   @step
+  async selectOrder(labTestName: string) {
+    return test.step(`When I select the "${labTestName}" order`, async () => {
+      await this.selectOrderCheckbox(labTestName).check();
+    });
+  }
+
+  @step
+  async expectSelectedOrderCount(count: number) {
+    return test.step(`Then ${count} order(s) should be selected`, async () => {
+      if (count === 0) {
+        await expect(this.selectedOrdersBar()).toBeHidden();
+      } else {
+        await expect(this.selectedOrdersBar()).toBeVisible();
+        await expect(this.selectedOrdersCount()).toHaveText(`${count}`);
+      }
+    });
+  }
+
+  @step
+  async clearSelectedOrders() {
+    return test.step('When I clear the selected orders', async () => {
+      await this.clearSelectedOrdersLink().click();
+    });
+  }
+
+  @step
+  async expectOrderSelectable(labTestName: string, selectable: boolean) {
+    return test.step(`Then "${labTestName}" should ${selectable ? '' : 'not '}offer a selection checkbox`, async () => {
+      await expect(this.selectOrderCheckbox(labTestName)).toHaveCount(selectable ? 1 : 0);
+    });
+  }
+
+  /** Collects a single specimen for every order currently selected in the table. */
+  @step
+  async collectSelectedOrders() {
+    await test.step('When I collect a specimen for the selected orders', async () => {
+      await this.collectSelectedOrdersButton().click();
+      await expect(this.specimenCollectionSection()).toBeVisible();
+    });
+    return new O2PatientLabOrdersPage.SpecimenCollectionForm(this);
+  }
+
+  @step
   async expectCollectSpecimenAction(labTestName: string, visible: boolean) {
     return test.step(`Then "${labTestName}" should ${visible ? '' : 'not '}offer a collect specimen action`, async () => {
       if (visible) {
@@ -203,6 +260,11 @@ export class O2PatientLabOrdersPage {
     readonly saveButton = () => this.section().locator('button.confirm.action-button');
     readonly cancelButton = () => this.section().locator('button.cancel.action-button');
 
+    /** Accessible name comes from aria-label, which is the lab test's display string. */
+    orderCheckbox(labTestName: string) {
+      return this.section().getByRole('checkbox', { name: labTestName });
+    }
+
     @step
     async waitUntilReady() {
       await expect(this.section().locator('.form-content-section')).toBeVisible();
@@ -220,6 +282,24 @@ export class O2PatientLabOrdersPage {
     async expectLabId(labId: string) {
       return test.step(`Then the lab ID should be "${labId}"`, async () => {
         await expect(this.labIdField()).toHaveValue(labId);
+      });
+    }
+
+    @step
+    async expectOrderSelected(labTestName: string, selected: boolean) {
+      return test.step(`Then "${labTestName}" should be ${selected ? 'selected' : 'deselected'}`, async () => {
+        if (selected) {
+          await expect(this.orderCheckbox(labTestName)).toBeChecked();
+        } else {
+          await expect(this.orderCheckbox(labTestName)).not.toBeChecked();
+        }
+      });
+    }
+
+    @step
+    async expectOrderNotListed(labTestName: string) {
+      return test.step(`Then "${labTestName}" should not be part of the specimen collection`, async () => {
+        await expect(this.orderCheckbox(labTestName)).toHaveCount(0);
       });
     }
 
