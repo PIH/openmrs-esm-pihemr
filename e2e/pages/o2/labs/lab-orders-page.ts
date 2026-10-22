@@ -4,16 +4,16 @@ import { getPatientIdentifierStr } from '../../../commands';
 import { step, test } from '../../../core';
 
 /** Status as rendered in the order table's Status column. */
-export type LabOrderStatus = 'Ordered' | 'Collected' | 'Reported' | 'Not Performed' | 'Canceled' | 'Expired';
+export type LabOrderStatus = 'Ordered' | 'Collected' | 'Reported' | 'Not performed' | 'Canceled' | 'Expired';
 
 /** Aggregate status badge rendered against a patient group row. */
 export type LabPatientStatus =
-  | 'All Ordered'
-  | 'All Collected'
-  | 'All Reported'
-  | 'All Not Performed'
-  | 'All Canceled'
-  | 'All Expired'
+  | 'All ordered'
+  | 'All collected'
+  | 'All reported'
+  | 'All not performed'
+  | 'All canceled'
+  | 'All expired'
   | 'Mixed';
 
 /** The Lab Status buttons offered by the record-results form. */
