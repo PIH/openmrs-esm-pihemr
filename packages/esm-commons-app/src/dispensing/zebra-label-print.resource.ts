@@ -1,16 +1,37 @@
 import { openmrsFetch, restBaseUrl } from '@openmrs/esm-framework';
 import { getDefaultZebraDevice } from './zebra-pdf-print';
 
-export async function printDispenseLabelToZebra(
-  dispenseUuid: string,
-  reportDefinitionUuid: string,
-  reportDesignUuid: string,
-  printMethod: 'pdf-direct' | 'browser-print' = 'pdf-direct',
+export interface PrintDispenseLabelsOptions {
+  /** Medication dispenses to print a label for; one page is printed per dispense. */
+  dispenseUuids: Array<string>;
+  /** Also print the summary label for the outer bag. */
+  printBagLabel?: boolean;
+  /** Prescription encounter, used by the report to build the bag label. */
+  encounterUuid?: string;
+  reportDefinitionUuid: string;
+  reportDesignUuid: string;
+  printMethod?: 'pdf-direct' | 'browser-print';
+  browserPrintFeatureKey?: string;
+}
+
+export async function printDispenseLabelsToZebra({
+  dispenseUuids,
+  printBagLabel = false,
+  encounterUuid,
+  reportDefinitionUuid,
+  reportDesignUuid,
+  printMethod = 'pdf-direct',
   browserPrintFeatureKey = '',
-): Promise<void> {
-  const url =
-    `${restBaseUrl}/reportingrest/runReport/${reportDefinitionUuid}/${reportDesignUuid}` +
-    `?medicationDispenseUuid=${encodeURIComponent(dispenseUuid)}`;
+}: PrintDispenseLabelsOptions): Promise<void> {
+  // The reporting REST endpoint only reads single-valued parameters, so the list is sent comma-separated.
+  const params = new URLSearchParams({
+    medicationDispenseUuids: dispenseUuids.join(','),
+    printBagLabel: String(printBagLabel),
+  });
+  if (encounterUuid) {
+    params.set('encounterUuid', encounterUuid);
+  }
+  const url = `${restBaseUrl}/reportingrest/runReport/${reportDefinitionUuid}/${reportDesignUuid}?${params.toString()}`;
 
   const [response, device] = await Promise.all([openmrsFetch(url, { method: 'POST' }), getDefaultZebraDevice()]);
 

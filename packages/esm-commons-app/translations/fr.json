@@ -1,9 +1,17 @@
 {
+  "bagLabel": "Étiquette de sac",
+  "cancel": "Annuler",
   "labelSentToPrinter": "Étiquette envoyée à l'imprimante",
+  "labelsSentToPrinter": "Étiquettes envoyées à l'imprimante",
+  "notDispensed": "Non délivré",
   "patientVisitSummary": "Patient visit summary",
+  "print": "Imprimer",
+  "printing": "Impression en cours…",
   "printLabel": "Imprimer l'étiquette",
   "printLabelFailed": "Échec de l'impression de l'étiquette",
-  "printing": "Impression en cours…",
+  "printLabels": "Imprimer les étiquettes",
+  "printLabelsFailed": "Échec de l'impression des étiquettes",
+  "selectLabelsToPrint": "Sélectionnez les étiquettes à imprimer",
   "success": "Succès",
   "unknownError": "Une erreur inconnue s'est produite",
   "visitSummary": "Résumé de la visite"
