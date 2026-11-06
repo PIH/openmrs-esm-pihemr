@@ -8,6 +8,21 @@ export interface ReferralsTableProps {
   referrals: Referral[];
 }
 
+/**
+ * A referral is pending (still needs action) when its fulfillment status concept is one of the configured
+ * pendingStatusConceptUuids. Comparing the status name against pendingStatuses is the old behavior, kept only
+ * as a fallback for reports that do not return the status uuid, since the name is translated to the user's language.
+ */
+export function isPendingReferral(
+  referral: Referral,
+  config: { pendingStatusConceptUuids?: string[]; pendingStatuses?: string[] },
+): boolean {
+  if (referral.fulfillment_status_uuid) {
+    return (config.pendingStatusConceptUuids ?? []).includes(referral.fulfillment_status_uuid);
+  }
+  return !!referral.fulfillment_status && (config.pendingStatuses ?? []).includes(referral.fulfillment_status);
+}
+
 export default function ReferrablesTable(props: ReferralsTableProps) {
   const config = useConfig();
 
@@ -61,7 +76,7 @@ export default function ReferrablesTable(props: ReferralsTableProps) {
                 <TableCell>{referral.referral_type}</TableCell>
                 <TableCell>{referral.details}</TableCell>
                 <TableCell>
-                  {config.pendingStatuses.includes(referral.fulfillment_status) ? (
+                  {isPendingReferral(referral, config) ? (
                     <ConfigurableLink
                       to={interpolateString(config.links.homeVisitForm, {
                         patientUuid: referral.patient_uuid || referral.person_uuid,
