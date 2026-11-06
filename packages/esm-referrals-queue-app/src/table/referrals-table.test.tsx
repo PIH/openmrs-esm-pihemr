@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import ReferralsTable, { isPendingReferral } from './referrals-table.component';
+import { configSchema } from '../config-schema';
 
 const PENDING_STATUS_UUID = '162866AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const REFERRAL_UNMET_UUID = '160068AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -12,8 +13,8 @@ jest.mock('@openmrs/esm-framework', () => ({
     links: {
       patientDash: '${openmrsBase}/patient?patientId=${patientUuid}',
       visitPage: '${openmrsBase}/visit?patient=${patientUuid}&visit=${visitUuid}',
-      homeVisitForm:
-        '${openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml',
+      // the real default, so the test catches a return url that does not follow the server's context path
+      homeVisitForm: jest.requireActual('../config-schema').configSchema.links.homeVisitForm._default,
     },
     pendingStatusConceptUuids: ['162866AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', '160068AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'],
     pendingStatuses: ['Pending status', 'Referral unmet'],
@@ -21,6 +22,8 @@ jest.mock('@openmrs/esm-framework', () => ({
 }));
 
 (window as any).openmrsBase = '/openmrs';
+(window as any).spaBase = '/openmrs/spa';
+(window as any).getOpenmrsSpaBase = () => '/openmrs/spa/';
 
 function referral(id: string, overrides: Partial<Referral>): Referral {
   return {
@@ -59,6 +62,22 @@ describe('referrals table status links', () => {
     expect(pending.getAttribute('href')).toContain('encounterId=encounter-PT1');
     expect(pending.getAttribute('href')).toContain('section-mch-referral.xml');
     expect(statusCell('Referans lan pa fèt').tagName).toBe('A');
+  });
+
+  it('returns from the referral form to the queue under the server context path', () => {
+    expect(configSchema.links.homeVisitForm._default).not.toContain('/mirebalais/');
+
+    render(
+      <ReferralsTable
+        referrals={[
+          referral('PT1', { fulfillment_status: 'Pending status', fulfillment_status_uuid: PENDING_STATUS_UUID }),
+        ]}
+      />,
+    );
+
+    const href = statusCell('Pending status').getAttribute('href');
+    expect(href).toMatch(/^\/openmrs\/htmlformentryui\//);
+    expect(new URL(href, 'http://localhost').searchParams.get('returnUrl')).toBe('/openmrs/spa/referrals-queue');
   });
 
   it('does not link statuses whose concept uuid is not pending', () => {

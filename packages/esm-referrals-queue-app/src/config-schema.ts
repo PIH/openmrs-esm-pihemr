@@ -37,7 +37,7 @@ export const configSchema = {
     homeVisitForm: {
       _type: Type.String,
       _default:
-        '${openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=/mirebalais/spa/referrals-queue',
+        '${openmrsBase}/htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=${openmrsSpaBase}/referrals-queue',
       _validators: [validators.isUrlWithTemplateParameters(['patientUuid', 'visitUuid', 'encounterUuid'])],
     },
   },

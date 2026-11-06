@@ -30,7 +30,7 @@ for information about how to provide configuration files.
   - homeVisitForm
     - **spa** *(default: false)*\
       *must be a boolean.*
-    - **url** *(default: /htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=/mirebalais/spa/referrals-queue)*\
+    - **url** *(default: /htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=${openmrsSpaBase}/referrals-queue)*\
       *must be a string. url template may not include backticks.*
 - **pendingStatusConceptUuids** *(default: 162866AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,160068AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)*\
   *UUIDs of the fulfillment status concepts whose referrals still need action (Pending status, Referral unmet). Their status links to the referral form.*
