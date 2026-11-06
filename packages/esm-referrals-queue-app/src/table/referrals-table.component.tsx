@@ -10,8 +10,8 @@ export interface ReferralsTableProps {
 
 /**
  * A referral is pending (still needs action) when its fulfillment status concept is one of the configured
- * pendingStatusConceptUuids. The status name is translated to the user's language, so it is only compared
- * against pendingStatuses when the report did not return the status uuid.
+ * pendingStatusConceptUuids. Comparing the status name against pendingStatuses is the old behavior, kept only
+ * as a fallback for reports that do not return the status uuid, since the name is translated to the user's language.
  */
 export function isPendingReferral(
   referral: Referral,
