@@ -1,6 +1,5 @@
 import React from 'react';
-import { of } from 'rxjs';
-import { render, fireEvent, screen, within, waitFor } from '@testing-library/react';
+import { act, render, fireEvent, screen, within, waitFor } from '@testing-library/react';
 import MockDate from 'mockdate';
 import ReferralsQueue from './referrals-queue.component';
 import { findNearestVisitLocationUuid, getReferrals } from './referrals-queue.resource';
@@ -8,6 +7,7 @@ import { findNearestVisitLocationUuid, getReferrals } from './referrals-queue.re
 const mockedUseConfig = jest.fn();
 const mockedUseLocations = jest.fn();
 const mockedUseSession = jest.fn();
+const mockedErrorHandler = jest.fn();
 
 jest.mock('./referrals-queue.resource');
 jest.mock('@openmrs/esm-framework', () => ({
@@ -15,6 +15,7 @@ jest.mock('@openmrs/esm-framework', () => ({
   useConfig: () => mockedUseConfig(),
   useLocations: () => mockedUseLocations(),
   useSession: () => mockedUseSession(),
+  createErrorHandler: () => mockedErrorHandler,
 }));
 
 const mockedGetReferrals = getReferrals as jest.Mock;
@@ -87,15 +88,17 @@ describe('referrals queue', () => {
       pendingStatuses: ['Pending status', 'Referral unmet'],
     });
   });
-  beforeEach(() => {
+  beforeEach(async () => {
     MockDate.set(todayString + 'T10:00:00.000-0400');
+    mockedErrorHandler.mockReset();
     mockedGetReferrals.mockReset();
-    mockedGetReferrals.mockReturnValue(of(referrals));
+    mockedGetReferrals.mockResolvedValue(referrals);
     mockedUseLocations.mockReturnValue(locations);
     mockedUseSession.mockReturnValue({ sessionLocation: locations[0] });
     mockedFindNearestVisitLocationUuid.mockReset();
     mockedFindNearestVisitLocationUuid.mockResolvedValue(undefined);
     view = render(<ReferralsQueue />);
+    await screen.findByText(referrals[0].zl_emr_id);
   });
 
   afterEach(() => {
@@ -104,6 +107,38 @@ describe('referrals queue', () => {
 
   it('renders without failing', () => {
     // in beforeEach
+  });
+
+  it('fetches referrals for the session location with an abort controller', () => {
+    expect(mockedGetReferrals).toHaveBeenCalledWith(
+      expect.objectContaining({ locationUuid: locations[0].uuid, locale: 'en' }),
+      expect.any(AbortController),
+    );
+  });
+
+  it('reports an error when fetching referrals fails', async () => {
+    view.unmount();
+    const error = new Error('network error');
+    mockedGetReferrals.mockRejectedValue(error);
+
+    render(<ReferralsQueue />);
+
+    await waitFor(() => expect(mockedErrorHandler).toHaveBeenCalledWith(error));
+  });
+
+  it('aborts the pending request and ignores its result after unmounting', async () => {
+    view.unmount();
+    let resolveReferrals: (value: unknown) => void;
+    mockedGetReferrals.mockReturnValue(new Promise((resolve) => (resolveReferrals = resolve)));
+
+    const { unmount } = render(<ReferralsQueue />);
+    const abortController: AbortController = mockedGetReferrals.mock.lastCall[1];
+    unmount();
+
+    expect(abortController.signal.aborted).toBe(true);
+    resolveReferrals(referrals);
+    await Promise.resolve();
+    expect(mockedErrorHandler).not.toHaveBeenCalled();
   });
 
   it('renders the expected fields', () => {
@@ -204,7 +239,7 @@ describe('referrals queue', () => {
     );
   });
 
-  it('refetches referrals for the newly selected location', () => {
+  it('refetches referrals for the newly selected location', async () => {
     fireEvent.click(
       screen.getByLabelText('Location', {
         selector: 'button',
@@ -215,7 +250,12 @@ describe('referrals queue', () => {
         selector: 'div',
       }),
     );
-    expect(mockedGetReferrals).toHaveBeenLastCalledWith(expect.objectContaining({ locationUuid: locations[1].uuid }));
+    expect(mockedGetReferrals).toHaveBeenLastCalledWith(
+      expect.objectContaining({ locationUuid: locations[1].uuid }),
+      expect.any(AbortController),
+    );
+    // let the refetch settle so its state update happens inside act
+    await act(() => mockedGetReferrals.mock.results.at(-1).value);
   });
 
   it('filters by statuses, with dropdown inferred from data', () => {

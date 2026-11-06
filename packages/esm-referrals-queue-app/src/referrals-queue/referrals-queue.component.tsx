@@ -55,13 +55,28 @@ export default function ReferralsQueue(props: ReferralsQueueProps) {
 
   React.useEffect(() => {
     if (fromDate && toDate && locationUuid) {
-      const sub = getReferrals({
-        fromDate: fromDate.format('YYYY-MM-DD'),
-        toDate: toDate.format('YYYY-MM-DD'),
-        locale: language,
-        locationUuid,
-      }).subscribe((referrals) => setReferrals(referrals), createErrorHandler());
-      return () => sub.unsubscribe();
+      const abortController = new AbortController();
+      getReferrals(
+        {
+          fromDate: fromDate.format('YYYY-MM-DD'),
+          toDate: toDate.format('YYYY-MM-DD'),
+          locale: language,
+          locationUuid,
+        },
+        abortController,
+      ).then(
+        (referrals) => {
+          if (!abortController.signal.aborted) {
+            setReferrals(referrals);
+          }
+        },
+        (error) => {
+          if (!abortController.signal.aborted) {
+            createErrorHandler()(error);
+          }
+        },
+      );
+      return () => abortController.abort();
     }
   }, [fromDate, toDate, language, locationUuid]);
 

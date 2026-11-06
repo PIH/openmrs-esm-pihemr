@@ -1,31 +1,58 @@
-import { openmrsFetch, openmrsObservableFetch } from '@openmrs/esm-framework';
-import { of } from 'rxjs';
+import { openmrsFetch } from '@openmrs/esm-framework';
 import { findNearestVisitLocationUuid, getReferrals } from './referrals-queue.resource';
 
-const mockedOpenmrsObservableFetch = openmrsObservableFetch as jest.Mock;
 const mockedOpenmrsFetch = openmrsFetch as jest.Mock;
 
 jest.mock('@openmrs/esm-framework', () => ({
   ...jest.requireActual('@openmrs/esm-framework'),
-  openmrsObservableFetch: jest.fn(),
   openmrsFetch: jest.fn(),
 }));
 
 describe('getReferrals', () => {
+  const params = {
+    fromDate: '2020-01-01',
+    toDate: '2020-02-01',
+    locale: 'en',
+    locationUuid: 'location-uuid-1',
+  };
+
   beforeEach(() => {
-    mockedOpenmrsObservableFetch.mockReset();
-    mockedOpenmrsObservableFetch.mockReturnValue(of({ data: { dataSets: [{ rows: [] }] } }));
+    mockedOpenmrsFetch.mockReset();
   });
 
-  it('includes the given location in the report request', () => {
-    getReferrals({
-      fromDate: '2020-01-01',
-      toDate: '2020-02-01',
-      locale: 'en',
-      locationUuid: 'location-uuid-1',
-    }).subscribe();
+  it('requests the report with the given dates, locale and location', async () => {
+    mockedOpenmrsFetch.mockResolvedValue({ data: { dataSets: [{ rows: [] }] } });
 
-    expect(mockedOpenmrsObservableFetch).toHaveBeenCalledWith(expect.stringContaining('location=location-uuid-1'));
+    await getReferrals(params);
+
+    const url = mockedOpenmrsFetch.mock.calls[0][0];
+    expect(url).toContain('/reportdata/cd7dfde7-764a-4da6-81c2-d5887ed1df51?');
+    expect(url).toContain('startDate=2020-01-01');
+    expect(url).toContain('endDate=2020-02-01');
+    expect(url).toContain('locale=en');
+    expect(url).toContain('location=location-uuid-1');
+  });
+
+  it('resolves to the rows of the first data set', async () => {
+    const rows = [{ zl_emr_id: 'PTID1' }, { zl_emr_id: 'PTID2' }];
+    mockedOpenmrsFetch.mockResolvedValue({ data: { dataSets: [{ rows }] } });
+
+    await expect(getReferrals(params)).resolves.toEqual(rows);
+  });
+
+  it('passes the abort signal to the request', async () => {
+    mockedOpenmrsFetch.mockResolvedValue({ data: { dataSets: [{ rows: [] }] } });
+    const abortController = new AbortController();
+
+    await getReferrals(params, abortController);
+
+    expect(mockedOpenmrsFetch).toHaveBeenCalledWith(expect.any(String), { signal: abortController.signal });
+  });
+
+  it('rejects when the request fails', async () => {
+    mockedOpenmrsFetch.mockRejectedValue(new Error('network error'));
+
+    await expect(getReferrals(params)).rejects.toThrow('network error');
   });
 });
 
