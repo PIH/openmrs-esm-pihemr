@@ -1,11 +1,14 @@
-import { openmrsFetch, openmrsObservableFetch } from '@openmrs/esm-framework';
-import { type Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { openmrsFetch } from '@openmrs/esm-framework';
 
-export function getReferrals({ fromDate, toDate, locale, locationUuid }): Observable<Object[]> {
-  return openmrsObservableFetch(
+export async function getReferrals(
+  { fromDate, toDate, locale, locationUuid },
+  abortController?: AbortController,
+): Promise<Object[]> {
+  const { data } = await openmrsFetch(
     `/ws/rest/v1/reportingrest/reportdata/cd7dfde7-764a-4da6-81c2-d5887ed1df51?startDate=${fromDate}&endDate=${toDate}&locale=${locale}&location=${locationUuid}`,
-  ).pipe(map(({ data }) => data['dataSets'][0]['rows']));
+    { signal: abortController?.signal },
+  );
+  return data['dataSets'][0]['rows'];
 }
 
 const LOCATION_ANCESTOR_REPRESENTATION = 'custom:(uuid,parentLocation:ref)';
