@@ -32,7 +32,12 @@ for information about how to provide configuration files.
       *must be a boolean.*
     - **url** *(default: /htmlformentryui/htmlform/editHtmlFormWithStandardUi.page?patientId=${patientUuid}&visitId=${visitUuid}&encounterId=${encounterUuid}&definitionUiResource=file:configuration/pih/htmlforms/section-mch-referral.xml&returnUrl=/mirebalais/spa/referrals-queue)*\
       *must be a string. url template may not include backticks.*
-- **pendingStatuses** *(default: Pending status,Referral unmet)*
+- **pendingStatusConceptUuids** *(default: 162866AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,160068AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)*\
+  *UUIDs of the fulfillment status concepts whose referrals still need action (Pending status, Referral unmet). Their status links to the referral form.*
+  - arrayElements\
+    *must be a concept UUID.*
+- **pendingStatuses** *(default: Pending status,Referral unmet)*\
+  *Fallback for reports that do not return fulfillment_status_uuid: names of the pending fulfillment statuses. Only matches when the status name is in this language, so prefer pendingStatusConceptUuids.*
   - arrayElements\
     *must be a string.*
 <!-- END OF GENERATED -->

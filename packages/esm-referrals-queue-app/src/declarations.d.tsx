@@ -14,6 +14,7 @@ type Referral = {
   visit_uuid: string;
   zl_emr_id: string;
   fulfillment_status: string;
+  fulfillment_status_uuid?: string;
   patient_uuid?: string;
   person_uuid?: string;
 };
